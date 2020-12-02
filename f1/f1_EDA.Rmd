@@ -1,0 +1,58 @@
+---
+title: "F1 Exploration"
+author: "Colin Takeda"
+date: 2020-11
+  output:
+  github_document:
+  toc: true
+---
+
+```{r setup}
+library(tidyverse)
+library(broom)
+```
+
+```{r}
+results_file <- "data/results.csv"
+drivers_file <- "data/drivers.csv"
+races_file <- "data/races.csv"
+
+df_results <- read_csv(results_file)
+df_drivers <- read_csv(drivers_file)
+df_races <- read_csv(races_file)
+```
+
+```{r initial checks}
+df_drivers %>% 
+  head()
+
+df_races %>% 
+  head()
+
+df_results %>% 
+  head()
+```
+
+```{r}
+
+df_drivernames <- df_drivers %>% 
+  select(driverId, driverRef) %>% 
+  inner_join(., df_results, by = "driverId") 
+
+
+
+df_fullresults <- df_races %>% 
+  select(raceId, year, round, circuitId, name, date) %>% 
+  full_join(., df_drivernames, by = "raceId")
+
+df_fullresults %>% 
+  filter(year >= 2015) %>% 
+  filter(driverRef == c("bottas", "hamilton", "max_verstappen", "ricciardo", "perez")) %>% 
+  group_by(driverRef, year) %>% 
+  mutate(mean_points = mean(points)) %>% 
+  ggplot(aes(year, mean_points)) + 
+  geom_point(aes(color = driverRef)) + 
+  geom_line(aes(color = driverRef)) + 
+  theme_minimal()
+```
+
