@@ -3,6 +3,8 @@ DataProcessingDocument
 
 ***Lilo’s work 12/8***
 
+Tidying data and joining additional information columns
+
 ``` r
 # throw out extraneous/irrelevant columns
 df_results_trim <- 
@@ -56,6 +58,8 @@ df_clean
     ## #   driver_name <chr>, driver_nationality <chr>, constructor_name <chr>,
     ## #   constructor_nationality <chr>, year <dbl>, round <dbl>, circuitId <dbl>,
     ## #   circuitName <chr>, status <chr>
+
+Filtering the data on drivers that drove for multiple constructors:
 
 ``` r
 df_multi_drivers <-
@@ -118,62 +122,13 @@ df_results_multi_drivers %>%
     ## #   constructor_nationality <chr>, year <dbl>, round <dbl>, circuitId <dbl>,
     ## #   circuitName <chr>, status <chr>
 
-``` r
-#model <-
-#  df_clean %>%
-#  lm(
-#    formula = positionOrder ~ driver_name
-    #formula = positionOrder ~ constructor_name
-    #formula = positionOrder ~ constructor_name + driver_name
-#  )
-#rsquare(model, df_clean)
+Using average lap time as our indicator of performance:
 
-#model2 <-
-#  df_results_multi_drivers %>%
-#  lm(
-#    formula = positionOrder ~ driver_name
-    #formula = positionOrder ~ constructor_name
-   #formula = positionOrder ~ constructor_name + driver_name
-#  )
-#rsquare(model2, df_results_multi_drivers)
-```
-
-Fitting a linear model to predict final standing for all the datapoints,
-driver and constructor have an rsquare of 0.30 and 0.25 respectively.
-When I add both variables together in the same model, the rsquare
-increases to 0.36, showing a great amount of overlapping information
-between driver and constructor and giving a “rank-deficient fit” error.
-
-I separated out only the datapoints about drivers who drove for multiple
-constructors, and it turns out that over 23000 of the approximately
-25000 datapoints were driven by “multi-drivers” as I’m calling them.
-Again fitting a linear model to predict final standing, driver and
-constructor have an rsquare of 0.26 and 0.24 respectively, showing a
-slight decrease in prediction capability but continuing the trend that
-constructor is slightly less accurate of a predictor than driver. When I
-add both as linear variables together, the rsquare increases to 0.32,
-still showing a great amount of overlapping information between driver
-and constructor.
-
-Thinking about why or why not a linear prediction model of final
-standing makes sense:
-
-  - Final standing (positionOrder) is a discrete positive integer.
-  - It can be greatly affected by status (Collision, etc.) which may be
-    random or unpredictable. Maybe that could justify the relatively low
-    r-square correlation that we’re seeing from this model?
-  - What if I add nationality into the prediction? Do some countries’
-    drivers or constructors actually do better overall?
-  - Pit stop times also affect the overall time and therefore the final
-    standing. Perhaps we could take that into account?
-  - Standing can also be greatly affected by starting position in the
-    race, because it gives an advantage. Is there a variable that tells
-    us starting position?
-  - If we care about using driver and constructor as linear variables,
-    then they must not be integer ID numbers because the model would
-    likely interpret integers as a continuous variable even though both
-    of these are in fact discrete, which is why I fit by name and not
-    ID.
+  - Accounts for only the laps that the driver was able to complete,
+    excluding when collisions or car troubles have happened, unlike
+    final position.
+  - Good overall performance indicator of the race, unlike fastest lap
+    time which is only one lap out of many.
 
 ***Colin’s Work 12/8***
 
