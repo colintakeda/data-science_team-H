@@ -1,9 +1,9 @@
 ---
 title: "DataProcessingDocument"
 output:
-  pdf_document:
-    toc: yes
   github_document:
+    toc: yes
+  pdf_document:
     toc: yes
 ---
 
@@ -12,7 +12,6 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(modelr)
 ```
-Hello
 
 ```{r get datasets, include = FALSE}
 df_results <-  read_csv("data/results.csv")
@@ -87,23 +86,23 @@ df_results_multi_drivers %>%
 
 
 ``` {r trying to fit linear model}
-model <-
-  df_clean %>%
-  lm(
-    formula = positionOrder ~ driver_name
+#model <-
+#  df_clean %>%
+#  lm(
+#    formula = positionOrder ~ driver_name
     #formula = positionOrder ~ constructor_name
     #formula = positionOrder ~ constructor_name + driver_name
-  )
-rsquare(model, df_clean)
+#  )
+#rsquare(model, df_clean)
 
-model2 <-
-  df_results_multi_drivers %>%
-  lm(
-    formula = positionOrder ~ driver_name
+#model2 <-
+#  df_results_multi_drivers %>%
+#  lm(
+#    formula = positionOrder ~ driver_name
     #formula = positionOrder ~ constructor_name
-    #formula = positionOrder ~ constructor_name + driver_name
-  )
-rsquare(model2, df_results_multi_drivers)
+   #formula = positionOrder ~ constructor_name + driver_name
+#  )
+#rsquare(model2, df_results_multi_drivers)
 ```
 Fitting a linear model to predict final standing for all the datapoints, driver and constructor have an rsquare of 0.30 and 0.25 respectively. When I add both variables together in the same model, the rsquare increases to 0.36, showing a great amount of overlapping information between driver and constructor and giving a "rank-deficient fit" error.
 
