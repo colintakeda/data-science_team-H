@@ -10,26 +10,122 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
+library(modelr)
 ```
+Hello
 
-```{r driver tidying}
-
-```
-
-```{r constructor tidying}
-
-```
-
-***Colin's Work 12/8***
-
-```{r time tidying, include = FALSE}
+```{r get datasets, include = FALSE}
 df_results <-  read_csv("data/results.csv")
 df_races <- read_csv("data/races.csv")
 df_laptimes <- read_csv("data/lap_times.csv")
 df_pitstops <-  read_csv("data/pit_stops.csv")
+df_drivers <- read_csv("data/drivers.csv")
+df_constructors <- read_csv("data/constructors.csv")
+df_status <- read_csv("data/status.csv")
 ```
 
-```{r}
+***Lilo's work 12/8***
+
+```{r driver tidying}
+# throw out extraneous/irrelevant columns
+df_results_trim <- 
+  df_results %>%
+  select(-c(time, position, positionText, points, grid, number))
+
+# select which attributes to keep about each driver
+df_drivers_trim <-
+  df_drivers %>%
+  unite(driver_name, c(forename, surname), sep = " ") %>% # driver's full name
+  select(driverId, driver_name, driver_nationality=nationality)
+df_results_plusdrivers <- left_join(df_results_trim, df_drivers_trim, by = "driverId")
+
+# select which attributes to keep about each constructor
+df_constructors_trim <-
+  df_constructors %>%
+  select(constructorId, constructor_name=name, constructor_nationality=nationality)
+df_results_plusconstructors <- left_join(df_results_plusdrivers, df_constructors_trim, by = "constructorId")
+
+# select which attributes to keep about each race
+df_races_trim <-
+  df_races %>%
+  select(raceId, year, round, circuitId, circuitName=name)
+df_results_plusraces <- left_join(df_results_plusconstructors, df_races_trim, by = "raceId")
+
+# get status from statusId
+df_results_plusstatus <- left_join(df_results_plusraces, df_status, by = "statusId")
+
+# turn all \\N into NAs
+df_clean <-
+  df_results_plusstatus %>%
+  mutate_all(na_if, "\\N")
+df_clean
+```
+
+``` {r drivers that drove for multiple constructors}
+df_multi_drivers <-
+  df_clean %>%
+  
+  # get one datapoint of each pair of driver and constructor
+  group_by(driver_name, constructor_name) %>%
+  filter(row_number() == 1) %>%
+  
+  # get how many constructors that each driver has driven for
+  group_by(driver_name) %>%
+  mutate(driver_numconstr = n()) %>%
+  
+  # keep drivers that drove for more than one constructor
+  filter(driver_numconstr > 1, row_number() == 1) %>%
+  select(driver_name) %>% 
+  arrange(driver_name)
+df_multi_drivers
+
+# get all of the races "multi drivers" drove
+df_results_multi_drivers <- inner_join(df_clean, df_multi_drivers, by = "driver_name")
+df_results_multi_drivers %>% 
+  arrange(driver_name)
+```
+
+
+``` {r trying to fit linear model}
+model <-
+  df_clean %>%
+  lm(
+    formula = positionOrder ~ driver_name
+    #formula = positionOrder ~ constructor_name
+    #formula = positionOrder ~ constructor_name + driver_name
+  )
+rsquare(model, df_clean)
+
+model2 <-
+  df_results_multi_drivers %>%
+  lm(
+    formula = positionOrder ~ driver_name
+    #formula = positionOrder ~ constructor_name
+    #formula = positionOrder ~ constructor_name + driver_name
+  )
+rsquare(model2, df_results_multi_drivers)
+```
+Fitting a linear model to predict final standing for all the datapoints, driver and constructor have an rsquare of 0.30 and 0.25 respectively. When I add both variables together in the same model, the rsquare increases to 0.36, showing a great amount of overlapping information between driver and constructor and giving a "rank-deficient fit" error.
+
+I separated out only the datapoints about drivers who drove for multiple constructors, and it turns out that over 23000 of the approximately 25000 datapoints were driven by "multi-drivers" as I'm calling them. Again fitting a linear model to predict final standing, driver and constructor have an rsquare of 0.26 and 0.24 respectively, showing a slight decrease in prediction capability but continuing the trend that constructor is slightly less accurate of a predictor than driver. When I add both as linear variables together, the rsquare increases to 0.32, still showing a great amount of overlapping information between driver and constructor.
+
+Thinking about why or why not a linear prediction model of final standing makes sense: 
+
+- Final standing (positionOrder) is a discrete positive integer.
+- It can be greatly affected by status (Collision, etc.) which may be random or unpredictable. Maybe that could justify the relatively low r-square correlation that we're seeing from this model?
+- What if I add nationality into the prediction? Do some countries' drivers or constructors actually do better overall?
+- Pit stop times also affect the overall time and therefore the final standing. Perhaps we could take that into account?
+- Standing can also be greatly affected by starting position in the race, because it gives an advantage. Is there a variable that tells us starting position?
+- If we care about using driver and constructor as linear variables, then they must not be integer ID numbers because the model would likely interpret integers as a continuous variable even though both of these are in fact discrete, which is why I fit by name and not ID.
+
+
+```{r constructor tidying}
+ 
+```
+
+***Colin's Work 12/8***
+
+```{r time tidying}
 df_results %>% 
   arrange(desc(raceId), driverId) %>% 
   glimpse()
