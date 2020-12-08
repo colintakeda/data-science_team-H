@@ -1,13 +1,14 @@
 ---
 title: "DataProcessingDocument"
-output: html_document
+output:
+  pdf_document:
+    toc: yes
+  github_document:
+    toc: yes
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-```
-
-```{r setup}
 library(tidyverse)
 ```
 
@@ -19,7 +20,55 @@ library(tidyverse)
 
 ```
 
-```{r time tidying}
+***Colin's Work 12/8***
 
+```{r time tidying, include = FALSE}
+df_results <-  read_csv("data/results.csv")
+df_races <- read_csv("data/races.csv")
+df_laptimes <- read_csv("data/lap_times.csv")
+df_pitstops <-  read_csv("data/pit_stops.csv")
 ```
 
+```{r}
+df_results %>% 
+  arrange(desc(raceId), driverId) %>% 
+  glimpse()
+
+df_laptimes %>%
+  arrange(desc(raceId), driverId) %>% 
+  glimpse()
+
+df_pitstops %>% 
+  glimpse()
+```
+
+```{r lap and laptimes visualization for specific race and racer}
+pits <- df_pitstops %>% 
+  filter(driverId == 1, raceId == 841) %>% 
+  pull(lap)
+
+df_laptimes %>% 
+  filter(driverId == 1, raceId == 841) %>% 
+  ggplot(aes(lap, milliseconds  / 1000 / 60)) + 
+  geom_vline(xintercept = pits, linetype = 2, color = "grey") +
+  geom_line() +
+  geom_point(color = "blue") + 
+  labs(
+    x = "Lap Number",
+    y = "Lap Time (Minutes)"
+  )
+```
+```{r lap number & laptimes for all racers in a given race}
+df_laptimes %>% 
+  filter(raceId == 841) %>% 
+  mutate(driverId = as.factor(driverId))%>% 
+  ggplot(aes(lap, milliseconds / 1000 / 60)) +
+  geom_line(aes(color = driverId)) + 
+  ylim(1.5, 2.5) + 
+  labs(
+    x = "Lap Number",
+    y = "Lap Time (Minutes)"
+  )
+```
+ 
+ 
