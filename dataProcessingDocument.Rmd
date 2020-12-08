@@ -57,6 +57,7 @@ df_results_plusstatus <- left_join(df_results_plusraces, df_status, by = "status
 df_clean <-
   df_results_plusstatus %>%
   mutate_all(na_if, "\\N")
+
 df_clean
 ```
 
@@ -164,6 +165,13 @@ df_laptimes %>%
     x = "Lap Number",
     y = "Lap Time (Minutes)"
   )
+```
+```{r}
+#df_avglap <- 
+  df_laptimes %>% 
+  group_by(driverId, raceId) %>% 
+  summarize(total_time = sum(milliseconds), avg_lap = total_time / n()) 
+
 ```
  
  
