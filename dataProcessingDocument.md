@@ -224,3 +224,28 @@ df_laptimes %>%
     ## Warning: Removed 1 row(s) containing missing values (geom_path).
 
 ![](dataProcessingDocument_files/figure-gfm/lap%20number%20&%20laptimes%20for%20all%20racers%20in%20a%20given%20race-1.png)<!-- -->
+
+``` r
+#df_avglap <- 
+  df_laptimes %>% 
+  group_by(driverId, raceId) %>% 
+  summarize(total_time = sum(milliseconds), avg_lap = total_time / n()) 
+```
+
+    ## `summarise()` regrouping output by 'driverId' (override with `.groups` argument)
+
+    ## # A tibble: 9,233 x 4
+    ## # Groups:   driverId [130]
+    ##    driverId raceId total_time avg_lap
+    ##       <dbl>  <dbl>      <dbl>   <dbl>
+    ##  1        1      1    5658698  97564.
+    ##  2        1      2    3391355 109399.
+    ##  3        1      3    7135351 127417.
+    ##  4        1      4    5530278  97022.
+    ##  5        1      5    5840216  89849.
+    ##  6        1      6    6086882  79050.
+    ##  7        1      7    5265302  90781.
+    ##  8        1      8    5032322  85294.
+    ##  9        1      9    5887232  99784.
+    ## 10        1     10    5903876  84341.
+    ## # ... with 9,223 more rows

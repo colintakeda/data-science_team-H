@@ -91,7 +91,6 @@ Using average lap time as our indicator of performance:
  - Accounts for only the laps that the driver was able to complete, excluding when collisions or car troubles have happened, unlike final position.
  - Good overall performance indicator of the race, unlike fastest lap time which is only one lap out of many.
 
-
 ```{r constructor tidying}
  
 ```
@@ -139,5 +138,11 @@ df_laptimes %>%
     y = "Lap Time (Minutes)"
   )
 ```
- 
+```{r}
+#df_avglap <- 
+  df_laptimes %>% 
+  group_by(driverId, raceId) %>% 
+  summarize(total_time = sum(milliseconds), avg_lap = total_time / n()) 
+
+```
  
