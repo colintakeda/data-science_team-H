@@ -48,7 +48,7 @@ df_results_plusconstructors <- left_join(df_results_plusdrivers, df_constructors
 # select which attributes to keep about each race
 df_races_trim <-
   df_races %>%
-  select(raceId, year, round, circuitId, circuitName=name)
+  select(raceId, year, round, circuitId, circuit_name=name)
 df_results_plusraces <- left_join(df_results_plusconstructors, df_races_trim, by = "raceId")
 
 # get status from statusId
@@ -126,6 +126,7 @@ df_laptimes %>%
     y = "Lap Time (Minutes)"
   )
 ```
+
 ```{r lap number & laptimes for all racers in a given race}
 df_laptimes %>% 
   filter(raceId == 841) %>% 
@@ -138,11 +139,23 @@ df_laptimes %>%
     y = "Lap Time (Minutes)"
   )
 ```
-```{r}
-#df_avglap <- 
-  df_laptimes %>% 
-  group_by(driverId, raceId) %>% 
-  summarize(total_time = sum(milliseconds), avg_lap = total_time / n()) 
 
+```{r}
+df_avglaptime <-
+  df_laptimes %>% 
+  group_by(driverId, raceId) %>%
+  summarize(total_time = sum(milliseconds), avg_lap = total_time / n())
+df_avglaptime
+
+df_with_avglaptime <- left_join(df_clean, df_avglaptime, by = c("driverId", "raceId"))
+df_with_avglaptime <-
+  df_with_avglaptime %>% 
+  filter(!is.na(avg_lap))
+
+df_with_avglaptime <-
+  df_with_avglaptime %>% 
+  group_by(circuitId) %>%
+  mutate(circuit_avg_lap = sum(avg_lap)/n())
+df_with_avglaptime
 ```
  
