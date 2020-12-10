@@ -21,9 +21,8 @@ df_pitstops <-  read_csv("data/pit_stops.csv")
 df_drivers <- read_csv("data/drivers.csv")
 df_constructors <- read_csv("data/constructors.csv")
 df_status <- read_csv("data/status.csv")
+df_circuits = read_csv('./data/circuits.csv')
 ```
-
-***Lilo's work 12/8***
 
 Tidying data and joining additional information columns
 ```{r driver tidying}
@@ -48,15 +47,21 @@ df_results_plusconstructors <- left_join(df_results_plusdrivers, df_constructors
 # select which attributes to keep about each race
 df_races_trim <-
   df_races %>%
-  select(raceId, year, round, circuitId, circuit_name=name)
+  select(raceId, year, round, circuitId, race_name=name)
 df_results_plusraces <- left_join(df_results_plusconstructors, df_races_trim, by = "raceId")
 
 # get status from statusId
 df_results_plusstatus <- left_join(df_results_plusraces, df_status, by = "statusId")
 
+# select which attributes to keep about each circuit
+df_circuits_trim <-
+  df_circuits %>% 
+  select(circuitId, circuit_name=name, circuitRef, circuit_country=country) 
+df_results_pluscircuits <- left_join(df_results_plusstatus, df_circuits_trim, by = c("circuitId"))
+
 # turn all \\N into NAs
 df_clean <-
-  df_results_plusstatus %>%
+  df_results_pluscircuits %>%
   mutate_all(na_if, "\\N")
 df_clean
 ```
@@ -90,14 +95,11 @@ Using average lap time as our indicator of performance:
 
  - Accounts for only the laps that the driver was able to complete, excluding when collisions or car troubles have happened, unlike final position.
  - Good overall performance indicator of the race, unlike fastest lap time which is only one lap out of many.
-
-```{r constructor tidying}
- 
-```
+ - The only problem is that it doesn't account for the difficulty of the circuit, so we need a metric for how hard a circuit is - average lap time for that entire circuit
 
 ***Colin's Work 12/8***
 
-```{r time tidying}
+```{r time tidying, include=FALSE}
 df_results %>% 
   arrange(desc(raceId), driverId) %>% 
   glimpse()
@@ -145,7 +147,6 @@ df_avglaptime <-
   df_laptimes %>% 
   group_by(driverId, raceId) %>%
   summarize(total_time = sum(milliseconds), avg_lap = total_time / n())
-df_avglaptime
 
 df_with_avglaptime <- left_join(df_clean, df_avglaptime, by = c("driverId", "raceId"))
 df_with_avglaptime <-
@@ -155,7 +156,34 @@ df_with_avglaptime <-
 df_with_avglaptime <-
   df_with_avglaptime %>% 
   group_by(circuitId) %>%
-  mutate(circuit_avg_lap = sum(avg_lap)/n())
+  mutate(circuit_avg_lap = mean(avg_lap), circuit_lap_sd = sd(avg_lap))
 df_with_avglaptime
 ```
+```{r}
+df_with_avglaptime %>%
+  ggplot(aes(fct_reorder(as.factor(circuitId), circuit_avg_lap), circuit_avg_lap)) + 
+  #ggplot(aes(fct_reorder(circuitRef, circuit_avg_lap), circuit_avg_lap)) + 
+  geom_point() +
+  theme(axis.text.x = element_text(angle = 270, vjust = 0.5, hjust = 0)) + 
+  labs(
+    x = "Circuit ID number",
+    y = "Average lap time (ms)"
+  )
+```
  
+ Looking at average lap time per circuit, we see a big difference. We will need to create a metric that allows us to compare average lap time across circuits. 
+ 
+ Ratio (avg_lap/circuit_avg_lap) doesn't work because it doesn't account for the variability of average lap time; some circuits can be completed much faster than average while others have a minimum average lap time just below the average. This may be due to factors such as the of the shape of the circuit, for example how many sharp turns it has.
+ 
+ How about we standardize average lap time:
+ 
+ - std(x) = (x-mean(x))/sd(x)
+ - mean(x) = sum(x_i)/n
+ - sd(x) = sqrt(sum((x_i-mean(x)^2)/n)
+ - where i is index, n is the number of datapoints, and x is the data
+ 
+```{r}
+df_with_avglaptime %>%
+  mutate(std_avg_lap = (avg_lap-circuit_avg_lap)/circuit_lap_sd) %>%
+  select(raceId, driverId, positionOrder, laps, status, avg_lap, std_avg_lap)
+```
