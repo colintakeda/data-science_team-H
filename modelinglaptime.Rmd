@@ -1,0 +1,114 @@
+---
+title: "Modeling Avg Lap Time for Racers and Constructors"
+output:
+  github_document:
+    toc: yes
+  pdf_document:
+    toc: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(modelr)
+```
+
+```{r load data, include=FALSE}
+df_avglaptime <- read_csv("processed_data/avglaptime.csv")
+```
+
+### EDA
+
+```{r data checks, include = FALSE}
+df_avglaptime %>% 
+  glimpse()
+
+df_avglaptime %>% 
+  summary()
+```
+
+## Historgrams
+
+```{r variable histgrams}
+df_avglaptime %>% 
+  filter(avg_lap <= 200000) %>% 
+  ggplot(aes(avg_lap)) + 
+  geom_histogram(bins = 50) +
+  labs(
+    title = "Average Lap Time Histogram", 
+    x = "Average Lap Time (ms)"
+  ) + 
+  theme_minimal()
+
+df_avglaptime %>% 
+  ggplot(aes(circuit_avg_lap)) + 
+  geom_histogram(bins = 60) + 
+  labs(
+    title = "Circuit Average Lap Time Histogram", 
+    x = "Average Circuit Lap Time (ms)"
+  ) + 
+  theme_minimal()
+```
+
+```{r circuit average lap}
+df_avglaptime %>% 
+  mutate(
+    year = as.factor(year), 
+    circuit_name = fct_reorder(circuit_name, circuit_avg_lap)) %>% 
+  ggplot(aes(circuit_name, circuit_avg_lap)) + 
+  geom_jitter(aes(color = year), alpha = 1/14) +
+  coord_flip() + 
+  labs(title = "Circuit Average Lap for GPs containing Drivers Who Have Driven For Multiple Teams") +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 9))
+```
+***Observations***
+
+- Same Grands Prix can have vastly different times, most likely due to different courses under the same GP name
+  - See United States GP and French GP
+- Also the circuit average lap time seems to diverge onto one time and doesn't seem to diverge much
+- `SO MUCH data` that it is hard to visualize the number of observations for a single GP 
+  - What is the best way to visualize these observations??
+  
+### Modeling 
+
+## Creating data frames
+
+```{r data loading, include = FALSE}
+df_stdavglap <- read_csv("processed_data/std_avg_laptime.csv")
+
+# Creating row ID column for anti_join
+df_stdavglap <- tibble::rowid_to_column(df_stdavglap, "ID")
+```
+
+```{r train and validate data frames}
+#Setting seed for temporary repeatability
+set.seed("12345")
+
+#Getting number of observations to feed into n for df_train
+number_obs <- df_stdavglap %>% 
+  summarize(n = n()) %>% 
+  pull(n)
+
+#Sampling by 
+df_train <-
+  df_stdavglap %>%
+  slice_sample(n = number_obs / 2)
+
+df_validate <-
+  anti_join(
+    df_stdavglap,
+    df_train,
+    by = "ID"
+  )
+
+df_train %>% arrange(ID)
+df_validate %>% arrange(ID)
+```
+
+## Creating Model
+
+```{r}
+
+```
+

@@ -152,16 +152,15 @@ However, circuits 16 and 76 have a high outlying mean and circuits 73, 10, and 3
 df_final <-
   df_stdavglap %>%
   # Getting rid of less useful cols
-  select(-c(resultId, milliseconds, rank, fastestLap, fastestLapTime, fastestLapSpeed, circuitRef, circuit_avg_lap, circuit_lap_sd)) %>%
+  select(-c(milliseconds, rank, fastestLap, fastestLapTime, circuitRef)) %>%
   
   # Getting rid of country info
-  select(-c(driver_nationality, constructor_nationality, circuit_country)) %>%
-
-  # Getting rid of cols represented two different ways 
-  select(-c(race_name, driverId, constructorId, circuit_name, statusId)) %>%
-  
-  # Getting rid of less useful metrics
-  select(-c(laps, total_time, avg_lap))
+  select(-c(driver_nationality, constructor_nationality, circuit_country))
 
 df_final
+```
+## Saving Processed Data
+
+```{r}
+write.csv(df_final,"processed_data/std_avg_laptime.csv", row.names = FALSE)
 ```
