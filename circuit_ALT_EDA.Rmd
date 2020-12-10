@@ -165,3 +165,8 @@ df_final <-
 
 df_final
 ```
+## Saving Processed Data
+
+```{r}
+write.csv(df_final,"processed_data/std_avg_laptime.csv", row.names = FALSE)
+```
