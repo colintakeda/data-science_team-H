@@ -1,0 +1,30 @@
+---
+title: "CarVsDriverEDA"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+dataFile <- "processed_data/avglaptime.csv"
+df_avgLapTimes <- read.csv(dataFile)
+```
+
+```{r}
+df_avgLapTimes %>%
+  filter(raceId == 3)%>%
+  mutate(driverId = fct_reorder(as.character(driverId),avg_lap))%>%
+  ggplot(mapping = aes(x = driverId, y = avg_lap)) +
+  geom_point()
+
+df_avgLapTimes %>%
+  filter(raceId == 3)%>%
+  mutate(constructorId = fct_reorder(as.character(constructorId),avg_lap))%>%
+  ggplot(mapping = aes(x = constructorId, y = avg_lap)) +
+  geom_point()
+```
+
+
