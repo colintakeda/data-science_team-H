@@ -1,13 +1,15 @@
-DataProcessingDocument
+Data Processing Document
 ================
 
-  - [Tidying data and joining additional information
-    columns](#tidying-data-and-joining-additional-information-columns)
-  - [Filtering on drivers that drove for multiple constructors (not
-    currently in
-    use)](#filtering-on-drivers-that-drove-for-multiple-constructors-not-currently-in-use)
+  - [Tidy data and join additional
+    information](#tidy-data-and-join-additional-information)
+  - [Filter on drivers that drove for multiple constructors (not in
+    use)](#filter-on-drivers-that-drove-for-multiple-constructors-not-in-use)
+  - [EDA on Laptimes](#eda-on-laptimes)
+  - [Compute Average Lap Times](#compute-average-lap-times)
+  - [Save final processed dataset](#save-final-processed-dataset)
 
-## Tidying data and joining additional information columns
+## Tidy data and join additional information
 
 ``` r
 # throw out extraneous/irrelevant columns
@@ -70,7 +72,7 @@ df_clean
     ## #   race_name <chr>, status <chr>, circuit_name <chr>, circuitRef <chr>,
     ## #   circuit_country <chr>
 
-## Filtering on drivers that drove for multiple constructors (not currently in use)
+## Filter on drivers that drove for multiple constructors (not in use)
 
 ``` r
 df_multi_drivers <-
@@ -134,7 +136,7 @@ df_results_multi_drivers %>%
     ## #   race_name <chr>, status <chr>, circuit_name <chr>, circuitRef <chr>,
     ## #   circuit_country <chr>
 
-***Colin’s Work 12/8***
+## EDA on Laptimes
 
 ``` r
 pits <- df_pitstops %>% 
@@ -171,6 +173,8 @@ df_laptimes %>%
     ## Warning: Removed 1 row(s) containing missing values (geom_path).
 
 ![](dataProcessingDocument_files/figure-gfm/lap%20number%20&%20laptimes%20for%20all%20racers%20in%20a%20given%20race-1.png)<!-- -->
+
+## Compute Average Lap Times
 
 ``` r
 df_avglaptime <-
@@ -235,6 +239,8 @@ df_with_avglaptime
     ## #   race_name <chr>, status <chr>, circuit_name <chr>, circuitRef <chr>,
     ## #   circuit_country <chr>, total_time <dbl>, avg_lap <dbl>,
     ## #   circuit_avg_lap <dbl>, circuit_lap_sd <dbl>
+
+## Save final processed dataset
 
 ``` r
 write.csv(df_with_avglaptime,"processed_data/avglaptime.csv", row.names = FALSE)

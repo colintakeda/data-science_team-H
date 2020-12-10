@@ -17,7 +17,7 @@ library(modelr)
 df_avglaptime <- read_csv("processed_data/avglaptime.csv")
 ```
 
-## Computing Average Lap Time per Circuit
+## Compute Average Lap Time per Circuit
 
 Using average lap time as our indicator of performance:
 
@@ -37,7 +37,7 @@ df_avglaptime %>%
 ```
  
  
-## Standardizing by Average Lap Time
+## Standardize by Average Lap Time
  
 Looking at average lap time per circuit, we see a big difference. We will need to create a metric that allows us to compare average lap time across circuits. 
  
@@ -116,7 +116,7 @@ Secondly, the graph faceted by circuit shows that this relationship is different
 
 Also, I hypothesize that the vertical stratification is due to more competitive races raising the standard for placing high, even when competing on the same track.
 
-## Assessing Standardized Average Lap Time vs. Circuit
+## Assess Standardized Average Lap Time vs. Circuit
 
 ```{r}
 df_stdavglap %>%
@@ -146,13 +146,13 @@ I am using this graph to visually compare the mean, quantiles, and outliers of s
 
 However, circuits 16 and 76 have a high outlying mean and circuits 73, 10, and 35 have a low outlying mean. And interestingly, there are no high outlying datapoints for the 4 circuits with the highest std_avg_lap. Perhaps the outliers in the mean std_alt are caused by track length? Circuit 73 is the Red Bull circuit, one of the shortest in all of Formula racing.
 
-## Downselecting final data
+## Downselect data
 
 ```{r}
 df_final <-
   df_stdavglap %>%
   # Getting rid of less useful cols
-  select(-c(resultId, milliseconds, rank, fastestLap, fastestLapTime, fastestLapSpeed, circuit_avg_lap, circuit_lap_sd)) %>%
+  select(-c(resultId, milliseconds, rank, fastestLap, fastestLapTime, fastestLapSpeed, circuitRef, circuit_avg_lap, circuit_lap_sd)) %>%
   
   # Getting rid of country info
   select(-c(driver_nationality, constructor_nationality, circuit_country)) %>%

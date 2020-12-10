@@ -1,15 +1,14 @@
 EDA on circuit and average lap time
 ================
 
-  - [Computing Average Lap Time per
-    Circuit](#computing-average-lap-time-per-circuit)
-  - [Standardizing by Average Lap
-    Time](#standardizing-by-average-lap-time)
-  - [Assessing Standardized Average Lap Time
-    vs. Circuit](#assessing-standardized-average-lap-time-vs.-circuit)
-  - [Downselecting final data](#downselecting-final-data)
+  - [Compute Average Lap Time per
+    Circuit](#compute-average-lap-time-per-circuit)
+  - [Standardize by Average Lap Time](#standardize-by-average-lap-time)
+  - [Assess Standardized Average Lap Time
+    vs. Circuit](#assess-standardized-average-lap-time-vs.-circuit)
+  - [Downselect data](#downselect-data)
 
-## Computing Average Lap Time per Circuit
+## Compute Average Lap Time per Circuit
 
 Using average lap time as our indicator of performance:
 
@@ -37,7 +36,7 @@ df_avglaptime %>%
 
 ![](circuit_ALT_EDA_files/figure-gfm/unnamed-chunk-1-1.png)<!-- -->
 
-## Standardizing by Average Lap Time
+## Standardize by Average Lap Time
 
 Looking at average lap time per circuit, we see a big difference. We
 will need to create a metric that allows us to compare average lap time
@@ -201,7 +200,7 @@ Also, I hypothesize that the vertical stratification is due to more
 competitive races raising the standard for placing high, even when
 competing on the same track.
 
-## Assessing Standardized Average Lap Time vs. Circuit
+## Assess Standardized Average Lap Time vs. Circuit
 
 ``` r
 df_stdavglap %>%
@@ -247,13 +246,13 @@ std\_avg\_lap. Perhaps the outliers in the mean std\_alt are caused by
 track length? Circuit 73 is the Red Bull circuit, one of the shortest in
 all of Formula racing.
 
-## Downselecting final data
+## Downselect data
 
 ``` r
 df_final <-
   df_stdavglap %>%
   # Getting rid of less useful cols
-  select(-c(resultId, milliseconds, rank, fastestLap, fastestLapTime, fastestLapSpeed, circuit_avg_lap, circuit_lap_sd)) %>%
+  select(-c(resultId, milliseconds, rank, fastestLap, fastestLapTime, fastestLapSpeed, circuitRef, circuit_avg_lap, circuit_lap_sd)) %>%
   
   # Getting rid of country info
   select(-c(driver_nationality, constructor_nationality, circuit_country)) %>%
@@ -267,7 +266,7 @@ df_final <-
 df_final
 ```
 
-    ## # A tibble: 9,233 x 10
+    ## # A tibble: 9,233 x 9
     ##    raceId positionOrder driver_name constructor_name  year round circuitId
     ##     <dbl>         <dbl> <chr>       <chr>            <dbl> <dbl>     <dbl>
     ##  1     18             1 "Lewis Ham~ McLaren           2008     1         1
@@ -280,5 +279,5 @@ df_final
     ##  8     18             8 "Kimi R\xe~ Ferrari           2008     1         1
     ##  9     18             9 "Robert Ku~ BMW Sauber        2008     1         1
     ## 10     18            10 "Timo Gloc~ Toyota            2008     1         1
-    ## # ... with 9,223 more rows, and 3 more variables: status <chr>,
-    ## #   circuitRef <chr>, std_avg_lap <dbl>
+    ## # ... with 9,223 more rows, and 2 more variables: status <chr>,
+    ## #   std_avg_lap <dbl>

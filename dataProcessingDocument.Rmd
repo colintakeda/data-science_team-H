@@ -1,5 +1,5 @@
 ---
-title: "DataProcessingDocument"
+title: "Data Processing Document"
 output:
   github_document:
     toc: yes
@@ -24,7 +24,7 @@ df_status <- read_csv("data/status.csv")
 df_circuits = read_csv('data/circuits.csv')
 ```
 
-## Tidying data and joining additional information columns
+## Tidy data and join additional information
 
 ```{r driver tidying}
 # throw out extraneous/irrelevant columns
@@ -67,7 +67,7 @@ df_clean <-
 df_clean
 ```
 
-## Filtering on drivers that drove for multiple constructors (not currently in use)
+## Filter on drivers that drove for multiple constructors (not in use)
 
 ``` {r drivers that drove for multiple constructors}
 df_multi_drivers <-
@@ -93,7 +93,7 @@ df_results_multi_drivers %>%
   arrange(driver_name)
 ```
 
-***Colin's Work 12/8***
+## EDA on Laptimes
 
 ```{r time tidying, include=FALSE}
 df_results %>% 
@@ -138,6 +138,8 @@ df_laptimes %>%
   )
 ```
 
+## Compute Average Lap Times
+
 ```{r}
 df_avglaptime <-
   df_laptimes %>% 
@@ -155,7 +157,12 @@ df_with_avglaptime <-
   group_by(circuitId) %>%
   mutate(circuit_avg_lap = mean(avg_lap), circuit_lap_sd = sd(avg_lap))
 df_with_avglaptime
+```
 
+
+## Save final processed dataset
+
+```{r}
 write.csv(df_with_avglaptime,"processed_data/avglaptime.csv", row.names = FALSE)
 ```
 
