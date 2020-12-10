@@ -1,7 +1,13 @@
 DataProcessingDocument
 ================
 
-Tidying data and joining additional information columns
+  - [Tidying data and joining additional information
+    columns](#tidying-data-and-joining-additional-information-columns)
+  - [Filtering on drivers that drove for multiple constructors (not
+    currently in
+    use)](#filtering-on-drivers-that-drove-for-multiple-constructors-not-currently-in-use)
+
+## Tidying data and joining additional information columns
 
 ``` r
 # throw out extraneous/irrelevant columns
@@ -64,7 +70,7 @@ df_clean
     ## #   race_name <chr>, status <chr>, circuit_name <chr>, circuitRef <chr>,
     ## #   circuit_country <chr>
 
-Filtering the data on drivers that drove for multiple constructors:
+## Filtering on drivers that drove for multiple constructors (not currently in use)
 
 ``` r
 df_multi_drivers <-
@@ -128,17 +134,6 @@ df_results_multi_drivers %>%
     ## #   race_name <chr>, status <chr>, circuit_name <chr>, circuitRef <chr>,
     ## #   circuit_country <chr>
 
-Using average lap time as our indicator of performance:
-
-  - Accounts for only the laps that the driver was able to complete,
-    excluding when collisions or car troubles have happened, unlike
-    final position.
-  - Good overall performance indicator of the race, unlike fastest lap
-    time which is only one lap out of many.
-  - The only problem is that it doesn’t account for the difficulty of
-    the circuit, so we need a metric for how hard a circuit is - average
-    lap time for that entire circuit
-
 ***Colin’s Work 12/8***
 
 ``` r
@@ -187,6 +182,26 @@ df_avglaptime <-
     ## `summarise()` regrouping output by 'driverId' (override with `.groups` argument)
 
 ``` r
+df_avglaptime
+```
+
+    ## # A tibble: 9,233 x 4
+    ## # Groups:   driverId [130]
+    ##    driverId raceId total_time avg_lap
+    ##       <dbl>  <dbl>      <dbl>   <dbl>
+    ##  1        1      1    5658698  97564.
+    ##  2        1      2    3391355 109399.
+    ##  3        1      3    7135351 127417.
+    ##  4        1      4    5530278  97022.
+    ##  5        1      5    5840216  89849.
+    ##  6        1      6    6086882  79050.
+    ##  7        1      7    5265302  90781.
+    ##  8        1      8    5032322  85294.
+    ##  9        1      9    5887232  99784.
+    ## 10        1     10    5903876  84341.
+    ## # ... with 9,223 more rows
+
+``` r
 df_with_avglaptime <- left_join(df_clean, df_avglaptime, by = c("driverId", "raceId"))
 df_with_avglaptime <-
   df_with_avglaptime %>% 
@@ -221,101 +236,6 @@ df_with_avglaptime
     ## #   circuit_country <chr>, total_time <dbl>, avg_lap <dbl>,
     ## #   circuit_avg_lap <dbl>, circuit_lap_sd <dbl>
 
-Looking at average lap time per circuit, we see a big difference. We
-will need to create a metric that allows us to compare average lap time
-across circuits.
-
-Ratio (avg\_lap/circuit\_avg\_lap) doesn’t work because it doesn’t
-account for the variability of average lap time; some circuits can be
-completed much faster than average while others have a minimum average
-lap time just below the average. This may be due to factors such as the
-of the shape of the circuit, for example how many sharp turns it has.
-
-How about we standardize average lap time:
-
-  - std(x) = (x-mean(x))/sd(x)
-  - mean(x) = sum(x\_i)/n
-  - sd(x) = sqrt(sum((x\_i-mean(x)^2)/n)
-  - where i is index, n is the number of datapoints, and x is the data
-
-Or normalize instead:
-
-  - norm(x) = (x-x\_min)/(x\_max-x\_min)
-
-<!-- end list -->
-
 ``` r
-df_with_avglaptime %>%
-  ggplot(aes(fct_reorder(as.factor(circuitId), circuit_avg_lap), circuit_avg_lap)) + 
-  #ggplot(aes(fct_reorder(circuitRef, circuit_avg_lap), circuit_avg_lap)) + 
-  geom_point() +
-  theme(axis.text.x = element_text(angle = 270, vjust = 0.5, hjust = 0)) + 
-  labs(
-    x = "Circuit ID number",
-    y = "Average lap time (ms)"
-  )
+write.csv(df_with_avglaptime,"processed_data/avglaptime.csv", row.names = FALSE)
 ```
-
-![](dataProcessingDocument_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
-
-``` r
-df_with_avglaptime %>%
-  mutate(std_avg_lap = (avg_lap-circuit_avg_lap)/circuit_lap_sd) %>%
-  select(raceId, driverId, positionOrder, laps, status, avg_lap, std_avg_lap)
-```
-
-    ## Adding missing grouping variables: `circuitId`
-
-    ## # A tibble: 9,233 x 8
-    ## # Groups:   circuitId [37]
-    ##    circuitId raceId driverId positionOrder  laps status    avg_lap std_avg_lap
-    ##        <dbl>  <dbl>    <dbl>         <dbl> <dbl> <chr>       <dbl>       <dbl>
-    ##  1         1     18        1             1    58 Finished   98114.     -0.110 
-    ##  2         1     18        2             2    58 Finished   98209.     -0.0997
-    ##  3         1     18        3             3    58 Finished   98255.     -0.0948
-    ##  4         1     18        4             4    58 Finished   98410.     -0.0783
-    ##  5         1     18        5             5    58 Finished   98425.     -0.0768
-    ##  6         1     18        6             6    57 +1 Lap    100082.      0.0985
-    ##  7         1     18        7             7    55 Engine     98864.     -0.0303
-    ##  8         1     18        8             8    53 Engine     99535.      0.0406
-    ##  9         1     18        9             9    47 Collision  99291.      0.0148
-    ## 10         1     18       10            10    43 Accident   96896.     -0.239 
-    ## # ... with 9,223 more rows
-
-Interestingly, although positionOrder and lap time standardized by
-circuit have some relationship, there are some notable examples where
-this isn’t the case:
-
-  - For race 18 driver 6, they had a status of “+1 Lap” (meaning that
-    they were lapped by the car ahead of them) and a notably larger
-    average lap time than the 5th and 7th place. That caused the
-    std\_avg\_lap to be much higher than its’ neighbors. It appears that
-    this driver only received 6th place because they completed more laps
-    of the race than the 6th place driver was able to.
-  - Again race 18, the driver placing 16th had a very high
-    std\_avg\_lap, possibly due to their Hydraulics issue shown in
-    status, yet place 22 went to someone with a lower std\_avg\_lap
-    because they were Disqualified.
-  - Interestingly, for race 18, driver 7 had a lower avg\_lap and
-    std\_avg\_lap than driver 8, but completed 2 more laps. Obviously,
-    completing more of the race earned them a higher place, but it looks
-    like driver 8 was actually performing better before they had engine
-    trouble.
-  - The same discrepancy of swapped position order and std\_avg\_lap can
-    be seen with drivers 9 and 10 of the same race.
-
-These examples illustrate how the metric of std\_avg\_lap effectively
-combats the impact of status and number of laps driven while still
-capturing overall performance in a way that is comparable cross-circuit,
-something that the metrics positionOrder and fastestLapSpeed cannot do.
-
-This std\_avg\_lap metric also highlights how variable the results of
-formula races can be due to car breakdowns and collisions, that the
-final ranking isn’t necessarily indicative of performance if the racer
-was unable to finish the whole race. Then again, is car trouble just
-part of the nature of this sport? Is completing as much of the race as
-possible actually a requirement because it tests endurance as well as
-speed, so in excluding the number of laps completed we could be losing
-some aspect of race performance? Or is it just considered unfortunate
-and random when a racer’s car breaks down or they get into a collision,
-and fans think “well they would’ve won if it wasn’t for X happening”?

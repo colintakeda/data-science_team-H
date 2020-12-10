@@ -14,113 +14,20 @@ library(modelr)
 ```
 
 ```{r get datasets, include = FALSE}
-df_results <-  read_csv("data/results.csv")
-df_races <- read_csv("data/races.csv")
-df_laptimes <- read_csv("data/lap_times.csv")
-df_pitstops <-  read_csv("data/pit_stops.csv")
-df_drivers <- read_csv("data/drivers.csv")
-df_constructors <- read_csv("data/constructors.csv")
-df_status <- read_csv("data/status.csv")
-df_circuits = read_csv('data/circuits.csv')
+df_avglaptime <- read_csv("processed_data/avglaptime.csv")
 ```
 
-## Tidying data and joining additional information columns
-```{r driver tidying}
-# throw out extraneous/irrelevant columns
-df_results_trim <- 
-  df_results %>%
-  select(-c(time, position, positionText, points, grid, number))
-
-# select which attributes to keep about each driver
-df_drivers_trim <-
-  df_drivers %>%
-  unite(driver_name, c(forename, surname), sep = " ") %>% # driver's full name
-  select(driverId, driver_name, driver_nationality=nationality)
-df_results_plusdrivers <- left_join(df_results_trim, df_drivers_trim, by = "driverId")
-
-# select which attributes to keep about each constructor
-df_constructors_trim <-
-  df_constructors %>%
-  select(constructorId, constructor_name=name, constructor_nationality=nationality)
-df_results_plusconstructors <- left_join(df_results_plusdrivers, df_constructors_trim, by = "constructorId")
-
-# select which attributes to keep about each race
-df_races_trim <-
-  df_races %>%
-  select(raceId, year, round, circuitId, race_name=name)
-df_results_plusraces <- left_join(df_results_plusconstructors, df_races_trim, by = "raceId")
-
-# get status from statusId
-df_results_plusstatus <- left_join(df_results_plusraces, df_status, by = "statusId")
-
-# select which attributes to keep about each circuit
-df_circuits_trim <-
-  df_circuits %>% 
-  select(circuitId, circuit_name=name, circuitRef, circuit_country=country) 
-df_results_pluscircuits <- left_join(df_results_plusstatus, df_circuits_trim, by = c("circuitId"))
-
-# turn all \\N into NAs
-df_clean <-
-  df_results_pluscircuits %>%
-  mutate_all(na_if, "\\N")
-df_clean
-```
-
-## Filtering on drivers that drove for multiple constructors (not currently in use)
-``` {r drivers that drove for multiple constructors}
-df_multi_drivers <-
-  df_clean %>%
-  
-  # get one datapoint of each pair of driver and constructor
-  group_by(driver_name, constructor_name) %>%
-  filter(row_number() == 1) %>%
-  
-  # get how many constructors that each driver has driven for
-  group_by(driver_name) %>%
-  mutate(driver_numconstr = n()) %>%
-  
-  # keep drivers that drove for more than one constructor
-  filter(driver_numconstr > 1, row_number() == 1) %>%
-  select(driver_name) %>% 
-  arrange(driver_name)
-df_multi_drivers
-
-# get all of the races "multi drivers" drove
-df_results_multi_drivers <- inner_join(df_clean, df_multi_drivers, by = "driver_name")
-df_results_multi_drivers %>% 
-  arrange(driver_name)
-```
-
-## Computing Average Lap Time
+## Computing Average Lap Time per Circuit
 
 Using average lap time as our indicator of performance:
 
  - Accounts for only the laps that the driver was able to complete, excluding when collisions or car troubles have happened, unlike final position.
  - Good overall performance indicator of the race, unlike fastest lap time which is only one lap out of many.
- - The only problem is that it doesn't account for the difficulty of the circuit, so we need a metric for how hard a circuit is - average lap time for that entire circuit
+ - The only problem is that it doesn't account for the difficulty of the circuit, so we need a metric for how hard a circuit is: the average lap time for that entire circuit.
 
 ```{r}
-df_avglaptime <-
-  df_laptimes %>% 
-  group_by(driverId, raceId) %>%
-  summarize(total_time = sum(milliseconds), avg_lap = total_time / n())
-
-df_with_avglaptime <- left_join(df_clean, df_avglaptime, by = c("driverId", "raceId"))
-df_with_avglaptime <-
-  df_with_avglaptime %>% 
-  filter(!is.na(avg_lap))
-
-df_with_avglaptime <-
-  df_with_avglaptime %>% 
-  group_by(circuitId) %>%
-  mutate(circuit_avg_lap = mean(avg_lap), circuit_lap_sd = sd(avg_lap))
-df_with_avglaptime
-```
-
-```{r}
-df_with_avglaptime %>%
+df_avglaptime %>%
   ggplot(aes(fct_reorder(as.factor(circuitId), circuit_avg_lap), circuit_avg_lap)) + 
-  #ggplot(aes(fct_reorder(circuitRef, circuit_avg_lap), circuit_avg_lap)) + 
   geom_point() +
   theme(axis.text.x = element_text(angle = 270, vjust = 0.5, hjust = 0)) + 
   labs(
@@ -130,7 +37,7 @@ df_with_avglaptime %>%
 ```
  
  
-## Standardizing Average Lap Time
+## Standardizing by Average Lap Time
  
 Looking at average lap time per circuit, we see a big difference. We will need to create a metric that allows us to compare average lap time across circuits. 
  
@@ -148,12 +55,12 @@ where $x$ is the data, $\mu$ is the mean, $\sigma$ is the standard deviation, an
 
  
 ```{r}
-df_with_stdavglap <- 
-  df_with_avglaptime %>%
+df_stdavglap <- 
+  df_avglaptime %>%
   mutate(std_avg_lap = (avg_lap-circuit_avg_lap)/circuit_lap_sd)
-df_with_stdavglap
+df_stdavglap
 
-df_with_stdavglap %>%
+df_stdavglap %>%
   select(raceId, driverId, positionOrder, laps, status, avg_lap, std_avg_lap)
 ```
 
@@ -166,10 +73,10 @@ Interestingly, although positionOrder and lap time standardized by circuit have 
  
 These examples illustrate how the metric of std_avg_lap effectively combats the impact of status and number of laps driven while still capturing overall performance in a way that is comparable cross-circuit, something that the metrics positionOrder and fastestLapSpeed cannot do. 
 
-This std_avg_lap metric also highlights how variable the results of formula races can be due to car breakdowns and collisions, that the final ranking isn't necessarily indicative of performance if the racer was unable to finish the whole race. Then again, is car trouble just part of the nature of this sport? Is completing as much of the race as possible actually a requirement because it tests endurance as well as speed, so in excluding the number of laps completed we could be losing some aspect of race performance? Or are car breakdowns and collisions considered to be random and unfortunate events?
+This std_avg_lap metric also highlights how variable the results of formula races can be due to car breakdowns and collisions, that the final ranking isn't necessarily indicative of performance if the racer was unable to finish the whole race.
 
 ```{r}
-df_with_stdavglap %>%
+df_stdavglap %>%
   ggplot(aes(as.factor(positionOrder), std_avg_lap)) +
   geom_boxplot() + 
   theme(axis.text.x = element_text(angle = 270, vjust = 0.5, hjust = 0)) + 
@@ -179,7 +86,7 @@ df_with_stdavglap %>%
     title = "Comparing standardized average lap time by final position"
   )
 
-df_with_stdavglap %>%
+df_stdavglap %>%
   ggplot(aes(as.factor(positionOrder), std_avg_lap)) +
   geom_boxplot() + 
   theme(axis.text.x = element_text(angle = 270, vjust = 0.5, hjust = 0)) + 
@@ -190,7 +97,7 @@ df_with_stdavglap %>%
     title = "Comparing standardized average lap time by final position"
   )
 
-df_with_stdavglap %>%
+df_stdavglap %>%
   filter(circuitId %% 2 == 1) %>%
   ggplot(aes(as.factor(positionOrder), std_avg_lap)) +
   geom_boxplot() + 
@@ -209,25 +116,10 @@ Secondly, the graph faceted by circuit shows that this relationship is different
 
 Also, I hypothesize that the vertical stratification is due to more competitive races raising the standard for placing high, even when competing on the same track.
 
-## Downselecting final data
+## Assessing Standardized Average Lap Time vs. Circuit
+
 ```{r}
-df_final <-
-  df_with_stdavglap %>%
-  # Getting rid of less useful cols
-  select(-c(resultId, milliseconds, rank, fastestLap, fastestLapTime, fastestLapSpeed, circuit_avg_lap, circuit_lap_sd, circuitRef)) %>%
-  
-  # Getting rid of country info
-  select(-c(driver_nationality, constructor_nationality, circuit_country)) %>%
-
-  # Getting rid of cols represented two different ways 
-  select(-c(race_name, driverId, constructorId, circuit_name, statusId)) %>%
-  
-  # Getting rid of less useful metrics
-  select(-c(laps, total_time, avg_lap))
-
-df_final
-
-df_final %>%
+df_stdavglap %>%
   ggplot(aes(fct_reorder(as.factor(circuitId), std_avg_lap), std_avg_lap)) +
   geom_boxplot() + 
   theme(axis.text.x = element_text(angle = 270, vjust = 0.5, hjust = 0)) + 
@@ -237,7 +129,7 @@ df_final %>%
     title = "Comparing standardized average lap time by circuit"
   )
 
-df_final %>%
+df_stdavglap %>%
   ggplot(aes(fct_reorder(as.factor(circuitId), std_avg_lap), std_avg_lap)) +
   geom_boxplot() + 
   theme(axis.text.x = element_text(angle = 270, vjust = 0.5, hjust = 0)) + 
@@ -252,4 +144,24 @@ df_final %>%
 
 I am using this graph to visually compare the mean, quantiles, and outliers of standardized average lap time by circuit in order to check that std_avg_lap minimizes the effect of circuit as much as possible. Generally, it seems that it does, because the mean stays at an absolute value less than 0.5 for almost every circuit. 
 
-However, circuits 16 and 76 seem like high outliers and circuits 73, 10, and 35 seem like low outliers. Interestingly, there are no high outlying datapoints for the 4 circuits with the highest std_avg_lap. Perhaps the outliers in the mean std_alt are caused by track length? I know that 73 is the Red Bull track, which is one of the shortest in all of Formula racing. I want to investigate why these are outliers and if there is a way to account for them better using a different or modified metric.
+However, circuits 16 and 76 have a high outlying mean and circuits 73, 10, and 35 have a low outlying mean. And interestingly, there are no high outlying datapoints for the 4 circuits with the highest std_avg_lap. Perhaps the outliers in the mean std_alt are caused by track length? Circuit 73 is the Red Bull circuit, one of the shortest in all of Formula racing.
+
+## Downselecting final data
+
+```{r}
+df_final <-
+  df_stdavglap %>%
+  # Getting rid of less useful cols
+  select(-c(resultId, milliseconds, rank, fastestLap, fastestLapTime, fastestLapSpeed, circuit_avg_lap, circuit_lap_sd)) %>%
+  
+  # Getting rid of country info
+  select(-c(driver_nationality, constructor_nationality, circuit_country)) %>%
+
+  # Getting rid of cols represented two different ways 
+  select(-c(race_name, driverId, constructorId, circuit_name, statusId)) %>%
+  
+  # Getting rid of less useful metrics
+  select(-c(laps, total_time, avg_lap))
+
+df_final
+```
