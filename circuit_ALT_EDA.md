@@ -7,6 +7,7 @@ EDA on circuit and average lap time
   - [Assess Standardized Average Lap Time
     vs. Circuit](#assess-standardized-average-lap-time-vs.-circuit)
   - [Downselect data](#downselect-data)
+  - [Saving Processed Data](#saving-processed-data)
 
 ## Compute Average Lap Time per Circuit
 
@@ -252,32 +253,35 @@ all of Formula racing.
 df_final <-
   df_stdavglap %>%
   # Getting rid of less useful cols
-  select(-c(resultId, milliseconds, rank, fastestLap, fastestLapTime, fastestLapSpeed, circuitRef, circuit_avg_lap, circuit_lap_sd)) %>%
+  select(-c(milliseconds, rank, fastestLap, fastestLapTime, circuitRef)) %>%
   
   # Getting rid of country info
-  select(-c(driver_nationality, constructor_nationality, circuit_country)) %>%
-
-  # Getting rid of cols represented two different ways 
-  select(-c(race_name, driverId, constructorId, circuit_name, statusId)) %>%
-  
-  # Getting rid of less useful metrics
-  select(-c(laps, total_time, avg_lap))
+  select(-c(driver_nationality, constructor_nationality, circuit_country))
 
 df_final
 ```
 
-    ## # A tibble: 9,233 x 9
-    ##    raceId positionOrder driver_name constructor_name  year round circuitId
-    ##     <dbl>         <dbl> <chr>       <chr>            <dbl> <dbl>     <dbl>
-    ##  1     18             1 "Lewis Ham~ McLaren           2008     1         1
-    ##  2     18             2 "Nick Heid~ BMW Sauber        2008     1         1
-    ##  3     18             3 "Nico Rosb~ Williams          2008     1         1
-    ##  4     18             4 "Fernando ~ Renault           2008     1         1
-    ##  5     18             5 "Heikki Ko~ McLaren           2008     1         1
-    ##  6     18             6 "Kazuki Na~ Williams          2008     1         1
-    ##  7     18             7 "S\xe9bast~ Toro Rosso        2008     1         1
-    ##  8     18             8 "Kimi R\xe~ Ferrari           2008     1         1
-    ##  9     18             9 "Robert Ku~ BMW Sauber        2008     1         1
-    ## 10     18            10 "Timo Gloc~ Toyota            2008     1         1
-    ## # ... with 9,223 more rows, and 2 more variables: status <chr>,
-    ## #   std_avg_lap <dbl>
+    ## # A tibble: 9,233 x 21
+    ##    resultId raceId driverId constructorId positionOrder  laps fastestLapSpeed
+    ##       <dbl>  <dbl>    <dbl>         <dbl>         <dbl> <dbl>           <dbl>
+    ##  1        1     18        1             1             1    58            218.
+    ##  2        2     18        2             2             2    58            218.
+    ##  3        3     18        3             3             3    58            217.
+    ##  4        4     18        4             4             4    58            215.
+    ##  5        5     18        5             1             5    58            218.
+    ##  6        6     18        6             3             6    57            213.
+    ##  7        7     18        7             5             7    55            213.
+    ##  8        8     18        8             6             8    53            217.
+    ##  9        9     18        9             2             9    47            215.
+    ## 10       10     18       10             7            10    43            213.
+    ## # ... with 9,223 more rows, and 14 more variables: statusId <dbl>,
+    ## #   driver_name <chr>, constructor_name <chr>, year <dbl>, round <dbl>,
+    ## #   circuitId <dbl>, race_name <chr>, status <chr>, circuit_name <chr>,
+    ## #   total_time <dbl>, avg_lap <dbl>, circuit_avg_lap <dbl>,
+    ## #   circuit_lap_sd <dbl>, std_avg_lap <dbl>
+
+## Saving Processed Data
+
+``` r
+write.csv(df_final,"processed_data/std_avg_laptime.csv", row.names = FALSE)
+```
