@@ -157,5 +157,7 @@ df_with_avglaptime <-
   group_by(circuitId) %>%
   mutate(circuit_avg_lap = sum(avg_lap)/n())
 df_with_avglaptime
+
+write.csv(df_with_avglaptime,"processed_data/avglaptime.csv", row.names = FALSE)
 ```
  
