@@ -46,10 +46,10 @@ df_constructors_trim <-
 df_results_plusconstructors <- left_join(df_results_plusdrivers, df_constructors_trim, by = "constructorId")
 
 # select which attributes to keep about each race
-df_races_trim <-
+df_circuits_trim <-
   df_races %>%
   select(raceId, year, round, circuitId, race_name=name)
-df_results_plusraces <- left_join(df_results_plusconstructors, df_races_trim, by = "raceId")
+df_results_plusraces <- left_join(df_results_plusconstructors, df_circuits_trim, by = "raceId")
 
 # get status from statusId
 df_results_plusstatus <- left_join(df_results_plusraces, df_status, by = "statusId")
