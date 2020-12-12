@@ -81,19 +81,68 @@ df_stdavglap <- read_csv("processed_data/std_avg_laptime.csv")
 df_stdavglap <- tibble::rowid_to_column(df_stdavglap, "ID")
 ```
 
+## Visualizing Std Average Lap Time
+
+```{r}
+df_stdavglap %>% 
+  ggplot(aes(std_avg_lap)) +
+  geom_histogram(bins = 50)
+```
+
+
+## Creating Model
+
+```{r modeling the entire data set}
+
+fit_driver <-
+  df_stdavglap %>%
+  lm(
+    data = .,
+    formula = std_avg_lap ~ as.factor(driverId)
+  )
+
+rsquare(fit_driver, df_stdavglap)
+mse(fit_driver, df_stdavglap)
+
+fit_constructor <- 
+  df_stdavglap %>% 
+  lm(
+    data = .,
+    formula = std_avg_lap ~ as.factor(constructorId)
+  )
+
+rsquare(fit_constructor, df_stdavglap)
+mse(fit_constructor, df_stdavglap)
+
+fit_driver_constructor <- 
+  df_stdavglap %>% 
+  lm(
+    data = .,
+    formula = std_avg_lap ~ as.factor(driverId) + as.factor(constructorId)
+  )
+
+rsquare(fit_driver_constructor, df_stdavglap)
+mse(fit_driver_constructor, df_stdavglap)
+
+```
+
+
 ```{r train and validate data frames}
 #Setting seed for temporary repeatability
 set.seed("12345")
 
 #Getting number of observations to feed into n for df_train
 number_obs <- df_stdavglap %>% 
+  group_by(driverId, circuitId) %>% 
   summarize(n = n()) %>% 
   pull(n)
 
 #Sampling by 
 df_train <-
   df_stdavglap %>%
-  slice_sample(n = number_obs / 2)
+  group_by(driverId, circuitId) %>% 
+  slice_sample(n = 2) %>% 
+  ungroup()
 
 df_validate <-
   anti_join(
@@ -106,9 +155,5 @@ df_train %>% arrange(ID)
 df_validate %>% arrange(ID)
 ```
 
-## Creating Model
 
-```{r}
-
-```
 
