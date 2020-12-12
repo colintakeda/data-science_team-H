@@ -67,6 +67,11 @@ df_clean <-
 df_clean
 ```
 
+
+```{r}
+write.csv(df_with_avglaptime,"processed_data/clean_f1.csv", row.names = FALSE)
+```
+
 ## Filter on drivers that drove for multiple constructors (not in use)
 
 ``` {r drivers that drove for multiple constructors}
@@ -155,7 +160,8 @@ df_with_avglaptime <-
 df_with_avglaptime <-
   df_with_avglaptime %>% 
   group_by(circuitId) %>%
-  mutate(circuit_avg_lap = mean(avg_lap), circuit_lap_sd = sd(avg_lap))
+  mutate(circuit_avg_lap = mean(avg_lap), circuit_lap_sd = sd(avg_lap)) %>%
+  mutate(std_avg_lap = (avg_lap-circuit_avg_lap)/circuit_lap_sd)
 df_with_avglaptime
 ```
 
@@ -165,4 +171,3 @@ df_with_avglaptime
 ```{r}
 write.csv(df_with_avglaptime,"processed_data/avglaptime.csv", row.names = FALSE)
 ```
-

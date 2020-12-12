@@ -14,7 +14,8 @@ knitr::opts_chunk$set(echo = FALSE)
 library(tidyverse)
 library(modelr)
 
-df_data <- read_csv("processed_data/std_avg_laptime.csv")
+df_timedata <- read_csv("processed_data/avglaptime.csv")
+df_data <- read_csv("processed_data/clean_f1.csv")
 ```
 
 ## Data Background
@@ -106,7 +107,7 @@ Upon consideration, final position ranking is heavily reliant on how many laps t
 Average lap time is a comprehensive measure of how well a driver performed in a race because it is informed only on the laps they were able to complete, unlike final position. The only problem is that it doesn't account for the effect of circuit on lap time, so we need to correct for this difference across circuits.
 
 ```{r average lap time per circuit, echo=FALSE}
-df_data %>%
+df_timedata %>%
   ggplot(aes(fct_reorder(as.factor(circuitId), circuit_avg_lap), circuit_avg_lap)) + 
   geom_point() +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) + 
@@ -128,7 +129,7 @@ where $x$ is the data, $\mu$ is the mean, $\sigma$ is the standard deviation, an
 
 
 ```{r}
-df_data %>%
+df_timedata %>%
   ggplot(aes(as.factor(positionOrder), std_avg_lap)) +
   geom_boxplot() + 
   labs(
@@ -146,7 +147,7 @@ First of all, the graph of standardized average lap time by final position shown
 #### Assess Standardized Average Lap Time vs. Circuit
 
 ```{r, echo = FALSE}
-df_data %>%
+df_timedata %>%
   ggplot(aes(fct_reorder(as.factor(circuitId), std_avg_lap), std_avg_lap)) +
   geom_boxplot() + 
   labs(

@@ -27,7 +27,7 @@ df_avglaptime %>%
   summary()
 ```
 
-## Historgrams
+## Histograms
 
 ```{r variable histgrams}
 df_avglaptime %>% 
