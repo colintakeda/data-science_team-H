@@ -33,7 +33,7 @@ df_avglaptime %>%
 df_avglaptime %>% 
   filter(avg_lap <= 200000) %>% 
   ggplot(aes(avg_lap)) + 
-  geom_histogram(bins = 50) +
+  geom_histogram(bins = 50) + 
   labs(
     title = "Average Lap Time Histogram", 
     x = "Average Lap Time (ms)"
@@ -98,7 +98,7 @@ fullfit_driver <-
   df_stdavglap %>%
   lm(
     data = .,
-    formula = std_avg_lap ~ as.factor(driverId)
+    formula = positionOrder ~ as.factor(driverId)
   )
 
 print("Full Fit - Just Driver")
@@ -109,7 +109,7 @@ fullfit_constructor <-
   df_stdavglap %>% 
   lm(
     data = .,
-    formula = std_avg_lap ~ as.factor(constructorId)
+    formula = positionOrder ~ as.factor(constructorId)
   )
 
 print("Full Fit - Just Constructor")
@@ -120,7 +120,7 @@ fullfit_driver_constructor <-
   df_stdavglap %>% 
   lm(
     data = .,
-    formula = std_avg_lap ~ as.factor(driverId) + as.factor(constructorId)
+    formula = positionOrder ~ as.factor(driverId) + as.factor(constructorId)
   )
 
 print("Full Fit - Driver and Constructor")

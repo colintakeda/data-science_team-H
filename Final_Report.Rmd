@@ -37,7 +37,6 @@ The Ergast API website does not give any details about their data collection pro
 #### Does the car or the driver have the greater impact?
 
 Unlike most sports, Formula 1 racing is heavily reliant on the performance capability of their equipment, which is their cars that are created by the constructors. To what extent do the constructor and driver predict race performance, and which one has the greater predictive capability?
- 
 
 ----------------------------------------
 
@@ -74,34 +73,20 @@ In our final dataset we kept these columns:
 - circuit_lap_sd
 - std_avg_lap
 
-```{r data}
-df_data
-```
-
 #### Potential Problems
 
 - Some examples of [constructor name changes](https://www.reddit.com/r/formula1/comments/1dos3r/i_made_a_diagram_to_show_how_current_f1_teams/)
 - Rules Era can change performance
 - New drivers are skewed because they don't have as many data points yet
-  - This data is for 70 years of races
-
+- This data is for 70 years of races and many things have changed over that period
 
 ----------------------------------------
 
 ## Exploratory Data Analysis
+ 
+#### Standardize by Average Lap Time
 
-#### Metric of Performance
-```{r finish race}
-df_data %>% 
-  mutate(finished = ((status == "Finished") | !str_detect(status, "\\d "))) %>%
-  ggplot(aes(finished, fill = finished)) +
-  geom_bar() + 
-  labs(
-    x = "Status: Finished or lapped",
-    y = "Count"
-  ) + 
-  theme_minimal()
-
+```{r finish race, fig.width=8, fig.height=6, echo=FALSE}
 df_data %>% 
   group_by(positionOrder) %>%
   mutate(mean_laps = mean(laps)) %>%
@@ -116,13 +101,11 @@ df_data %>%
   geom_line(color = "blue")
 ```
 
-Initially we wanted to use final position in the race as our metric of performance. Upon further consideration, final ranking is heavily reliant on how many laps the driver was able to complete. And almost a third of the time, collisions or car troubles put drivers out of commission before the race is finished. These final standings are not reflective of how well the driver was doing before that point, so we decided to use average lap time to create a more comprehensive performance metric.
+Upon consideration, final position ranking is heavily reliant on how many laps the driver was able to complete. And almost a third of the time, collisions or car troubles put drivers out of commission before the race is finished. These final standings are not reflective of how well the driver was doing before that point, so we decided to use average lap time to create a more comprehensive performance metric.
 
 Average lap time is a comprehensive measure of how well a driver performed in a race because it is informed only on the laps they were able to complete, unlike final position. The only problem is that it doesn't account for the effect of circuit on lap time, so we need to correct for this difference across circuits.
- 
-#### Standardize by Average Lap Time
 
-```{r average lap time per circuit}
+```{r average lap time per circuit, echo=FALSE}
 df_data %>%
   ggplot(aes(fct_reorder(as.factor(circuitId), circuit_avg_lap), circuit_avg_lap)) + 
   geom_point() +
@@ -143,38 +126,26 @@ $$z = \frac{x-\mu}{\sigma}$$
 
 where $x$ is the data, $\mu$ is the mean, $\sigma$ is the standard deviation, and $z$ is the standard score of $x$
 
+
 ```{r}
 df_data %>%
   ggplot(aes(as.factor(positionOrder), std_avg_lap)) +
   geom_boxplot() + 
-  labs(
-    x = "Position number",
-    y = "standardized average lap time",
-    title = "Comparing standardized average lap time by final position"
-  ) + 
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) + 
-  ylim(-2, 2)
-
-df_data %>%
-  filter(circuitId %% 2 == 1) %>%
-  ggplot(aes(as.factor(positionOrder), std_avg_lap)) +
-  geom_boxplot() + 
-  facet_wrap(vars(circuitId)) +
   labs(
     x = "Position number",
     y = "standardized average lap time",
     title = "Comparing standardized average lap time by final position"
   ) + 
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+#+ 
+#  ylim(-2, 2)
 ```
 
-First of all, the graph of standardized average lap time by final position shown above confirms the obvious: final ranking and standardized average lap time are related. The faster you drive, the more likely you are to win the race! 
-
-Secondly, the graph faceted by circuit shows that this relationship is different for each track, and that there is an increasing variability in the higher positions. This is almost certainly explained by the fact that collisions or other car troubles reduce the likelihood of being able to finish the race, thus increasing their position number, independent of how well they were performing before their accident. The vertical stratification could due to more competitive races raising the standard for placing high, even when competing on the same track. 
+First of all, the graph of standardized average lap time by final position shown above confirms the obvious: final ranking and standardized average lap time are related. The faster you drive, the more likely you are to win the race! Secondly, there is an increasing variability in the higher positions. This is almost certainly explained by the fact that collisions or other car troubles reduce the likelihood of being able to finish the race, thus increasing their position number, independent of how well they were performing before their accident. The vertical stratification could due to more competitive races raising the standard for placing high, even when competing on the same track. 
 
 #### Assess Standardized Average Lap Time vs. Circuit
 
-```{r}
+```{r, echo = FALSE}
 df_data %>%
   ggplot(aes(fct_reorder(as.factor(circuitId), std_avg_lap), std_avg_lap)) +
   geom_boxplot() + 
@@ -184,27 +155,16 @@ df_data %>%
     title = "Comparing standardized average lap time by circuit"
   ) + 
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
-#+ 
-#  ylim(-2, 2)
-
-df_data %>%
-  ggplot(aes(laps, std_avg_lap, group = laps)) +
-  geom_boxplot() + 
-  labs(
-    x = "Number of laps driven",
-    y = "standardized average lap time",
-    title = "Comparing standardized average lap time by number of laps"
-  ) + 
-  ylim(-2, 2)
 ```
 
-The graph above shows a visual comparison of standardized average lap time by circuit. What we hope to see is that standardized average lap time minimizes the effect of circuit, and it seems that it does because the slope of the median is small in magnitude relative to the range of the standardized average lap time.
+The graph above shows a visual comparison of standardized average lap time by circuit. What we hope to see is that standardized average lap time minimizes the effect of circuit, and it seems it does because the slope of the median is small in magnitude relative to the range of the standardized average lap time. In conclusion, standardized average lap time captures overall performance in a way that minimizes the effect of number of laps driven and what circuit the race was held on.
 
-The circuit with the lowest median std_avg_lap is circuit 73, the Red Bull circuit, one of the shortest in all of Formula racing. Perhaps the outliers are caused by track length?
+However, when we applied a linear model using standard average lap time as the performance metric with driver and constructor as inputs, we found that it had an rsquare of only 0.08. This discouraging result told us that standardized average lap time is very weakly correlated to driver and constructor, so we decided to take our modelling attempts in another direction.
 
-In conclusion, standardized average lap time captures overall performance in a way that minimizes the effect of number of laps driven and what circuit the race was held on.
+## Linear Model by final position
 
-#### Linear Model
+\\TODO:
+Using final position in the race as our metric of performance, the linear model relating driver and final position has an rsquare of 0.25 ... 
 
 #### Uncertainty Quantification / Prediction Interval
 
