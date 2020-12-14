@@ -9,16 +9,18 @@
       - [Time data](#time-data)
       - [Potential Problems](#potential-problems)
   - [Exploratory Data Analysis](#exploratory-data-analysis)
-      - [Standardize by Average Lap
-        Time](#standardize-by-average-lap-time)
-  - [Graphing by standard average lap
-    time](#graphing-by-standard-average-lap-time)
-      - [Assess Standardized Average Lap Time
-        vs. Circuit](#assess-standardized-average-lap-time-vs.-circuit)
-  - [Graphing by final position](#graphing-by-final-position)
-  - [Linear Model by final position](#linear-model-by-final-position)
-      - [Uncertainty Quantification / Prediction
-        Interval](#uncertainty-quantification-prediction-interval)
+      - [Standardized Average Lap Time](#standardized-average-lap-time)
+      - [Standardized Average Lap Time by
+        Circuit](#standardized-average-lap-time-by-circuit)
+      - [Driver and Constructor by Standardized Average Lap
+        Time](#driver-and-constructor-by-standardized-average-lap-time)
+      - [Modelling by standard average lap
+        time](#modelling-by-standard-average-lap-time)
+  - [Final Position](#final-position)
+      - [Driver and Constructor by Final
+        Position](#driver-and-constructor-by-final-position)
+      - [Modelling by Final Position](#modelling-by-final-position)
+      - [Probability Intervals](#probability-intervals)
   - [Conclusion](#conclusion)
   - [Rubrics](#rubrics)
 
@@ -109,27 +111,6 @@ In our dataset we kept these columns:
   - status
   - circuit\_name
 
-<!-- end list -->
-
-    ## Rows: 24,900
-    ## Columns: 16
-    ## $ resultId         <dbl> 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,...
-    ## $ raceId           <dbl> 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18...
-    ## $ driverId         <dbl> 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,...
-    ## $ constructorId    <dbl> 1, 2, 3, 4, 1, 3, 5, 6, 2, 7, 8, 4, 6, 9, 7, 10, 9...
-    ## $ positionOrder    <dbl> 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,...
-    ## $ laps             <dbl> 58, 58, 58, 58, 58, 57, 55, 53, 47, 43, 32, 30, 29...
-    ## $ fastestLapSpeed  <dbl> 218.300, 217.586, 216.719, 215.464, 218.385, 212.9...
-    ## $ statusId         <dbl> 1, 1, 1, 1, 1, 11, 5, 5, 4, 3, 7, 8, 5, 4, 10, 9, ...
-    ## $ driver_name      <chr> "Lewis Hamilton", "Nick Heidfeld", "Nico Rosberg",...
-    ## $ constructor_name <chr> "McLaren", "BMW Sauber", "Williams", "Renault", "M...
-    ## $ year             <dbl> 2008, 2008, 2008, 2008, 2008, 2008, 2008, 2008, 20...
-    ## $ round            <dbl> 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,...
-    ## $ circuitId        <dbl> 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,...
-    ## $ race_name        <chr> "Australian Grand Prix", "Australian Grand Prix", ...
-    ## $ status           <chr> "Finished", "Finished", "Finished", "Finished", "F...
-    ## $ circuit_name     <chr> "Albert Park Grand Prix Circuit", "Albert Park Gra...
-
 #### Time data
 
 The column `milliseconds` reports the race completion time for all of
@@ -151,32 +132,6 @@ In this time-filtered dataset we added these columns:
   - circuit\_lap\_sd
   - std\_avg\_lap
 
-<!-- end list -->
-
-    ## Rows: 9,233
-    ## Columns: 21
-    ## $ resultId         <dbl> 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,...
-    ## $ raceId           <dbl> 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18...
-    ## $ driverId         <dbl> 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,...
-    ## $ constructorId    <dbl> 1, 2, 3, 4, 1, 3, 5, 6, 2, 7, 8, 4, 6, 9, 7, 10, 1...
-    ## $ positionOrder    <dbl> 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,...
-    ## $ laps             <dbl> 58, 58, 58, 58, 58, 57, 55, 53, 47, 43, 32, 30, 29...
-    ## $ fastestLapSpeed  <dbl> 218.300, 217.586, 216.719, 215.464, 218.385, 212.9...
-    ## $ statusId         <dbl> 1, 1, 1, 1, 1, 11, 5, 5, 4, 3, 7, 8, 5, 4, 10, 9, ...
-    ## $ driver_name      <chr> "Lewis Hamilton", "Nick Heidfeld", "Nico Rosberg",...
-    ## $ constructor_name <chr> "McLaren", "BMW Sauber", "Williams", "Renault", "M...
-    ## $ year             <dbl> 2008, 2008, 2008, 2008, 2008, 2008, 2008, 2008, 20...
-    ## $ round            <dbl> 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,...
-    ## $ circuitId        <dbl> 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,...
-    ## $ race_name        <chr> "Australian Grand Prix", "Australian Grand Prix", ...
-    ## $ status           <chr> "Finished", "Finished", "Finished", "Finished", "F...
-    ## $ circuit_name     <chr> "Albert Park Grand Prix Circuit", "Albert Park Gra...
-    ## $ total_time       <dbl> 5690616, 5696094, 5698779, 5707797, 5708630, 57046...
-    ## $ avg_lap          <dbl> 98114.07, 98208.52, 98254.81, 98410.29, 98424.66, ...
-    ## $ circuit_avg_lap  <dbl> 99150.94, 99150.94, 99150.94, 99150.94, 99150.94, ...
-    ## $ circuit_lap_sd   <dbl> 9453.611, 9453.611, 9453.611, 9453.611, 9453.611, ...
-    ## $ std_avg_lap      <dbl> -0.10968007, -0.09968936, -0.09479249, -0.07834557...
-
 #### Potential Problems
 
   - Some examples of [constructor name
@@ -186,20 +141,21 @@ In this time-filtered dataset we added these columns:
     yet
   - This data is for 70 years of races and [formula racing has changed a
     lot](https://youtu.be/hgLQWIAaCmY)
+      - Consider filtering on year \>= 2000
 
 -----
 
 ## Exploratory Data Analysis
 
-#### Standardize by Average Lap Time
+#### Standardized Average Lap Time
 
 ![](Final_Report_files/figure-gfm/finish%20race-1.png)<!-- -->
 
-As shown in the graph above, final position ranking is heavily reliant
-on how many laps the driver was able to complete. And almost a third of
-the time, collisions or car troubles put drivers out of commission
-before the race is finished. These final standings are not reflective of
-how well the driver was doing before that point, so we decided to use
+As shown in the graph above, final position is heavily reliant on how
+many laps the driver was able to complete. And almost a third of the
+time, collisions or car troubles put drivers out of commission before
+the race is finished. These final standings are not reflective of how
+well the driver was doing before that point, so we decided to use
 average lap time to create a more comprehensive performance metric.
 
 Average lap time is a comprehensive measure of how well a driver
@@ -210,12 +166,12 @@ correct for this difference across circuits.
 
 ![](Final_Report_files/figure-gfm/average%20lap%20time%20per%20circuit-1.png)<!-- -->
 
-The average lap time can be drastically different across circuits due to
-the differences in track length and shape, so we need a way to compare
-average lap time across circuits. Dividing average lap time by average
-lap time per circuit doesn’t work because it doesn’t account for the
-range of average lap time on each circuit. To correct for the impact of
-circuit on average lap time, we standardized by circuit:
+The average lap time varies across circuits due to the differences in
+track length and shape, so we need a way to compare average lap time
+across circuits. Dividing average lap time by average lap time per
+circuit doesn’t work because it doesn’t account for the range of average
+lap time on each circuit. To correct for the impact of circuit on
+average lap time, we standardized by circuit:
 
 \[\mu = \sum_{i}^{n} \frac{x_i}{n}\]
 
@@ -226,40 +182,90 @@ circuit on average lap time, we standardized by circuit:
 where \(x\) is the data, \(\mu\) is the mean, \(\sigma\) is the standard
 deviation, and \(z\) is the standard score of \(x\)
 
-## Graphing by standard average lap time
+#### Standardized Average Lap Time by Circuit
 
 ![](Final_Report_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
 
-#### Assess Standardized Average Lap Time vs. Circuit
+The graph above shows a visual comparison of standardized average lap
+time by circuit. The slope of the median is small in magnitude relative
+to the range of the standardized average lap time, showing that
+standardizing the average lap time successfully minimizes the effect of
+circuit.
+
+#### Driver and Constructor by Standardized Average Lap Time
+
+    ## Warning: Removed 384 rows containing non-finite values (stat_boxplot).
 
 ![](Final_Report_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
 
-The graph above shows a visual comparison of standardized average lap
-time by circuit. What we hope to see is that standardized average lap
-time minimizes the effect of circuit, and it seems it does because the
-slope of the median is small in magnitude relative to the range of the
-standardized average lap time. In conclusion, standardized average lap
-time captures overall performance in a way that minimizes the effect of
-number of laps driven and what circuit the race was held on.
+Constructor and standardized average lap time appear to have a positive
+and fairly linear relationship. This makes sense because standardizing
+should correct the distribution to become more linear. Seeing that
+constructor has an impact on standard average lap time is a good sign
+because it indicates that there may be some causality and therefore also
+predictive capability.
 
-However, when we applied a linear model using standard average lap time
-as the performance metric with driver and constructor as inputs, we
-found that it had an rsquare of only 0.08. This discouraging result told
-us that standardized average lap time is very weakly correlated to
-driver and constructor, so we decided to take our modelling attempts in
-another direction.
+#### Modelling by standard average lap time
 
-## Graphing by final position
+    ## [1] "Full Fit - Just Driver"
+
+    ## Rsquare 0.05748965
+
+    ## MSE 0.9387334
+
+    ## [1] "Full Fit - Just Constructor"
+
+    ## Rsquare 0.04633339
+
+    ## MSE 0.9498449
+
+    ## [1] "Full Fit - Driver and Constructor"
+
+    ## Rsquare 0.08119187
+
+    ## MSE 0.9151261
+
+Looking at our mean square error first we can compare our different
+models against one another. Between models, the error is lowest with
+both `driver and constructor` which is a good sign that both are
+informative towards lap time. The order of best model to worst, solely
+based upon MSE, is driver and constructor, just driver, and finally just
+constructor. These results may imply that driver is a better predictor
+of outcome than constructor, but this is not necessarily the case.
+
+Looking next at our rsquared value we see that our models do **not**
+have very good coverage of the data. We are looking at each model only
+covering around `4.6% to 8.1%` of the data, which calls into question
+the validity the comparisons made for our MSE. The order of best model
+to worst, solely based upon rsquare, is driver and constructor, just
+driver, and finally just constructor, so the overall standings seem to
+follow the exact same trend seen in both MSE and rsquare.
+
+These models should be taken with a grain or more of salt as we are
+using the entire data set to create them, so we don’t have a separate
+training and validation data set. However, using a split of the dataset
+for training and the rest for validation will not increase the accuracy
+of the model. With such a low predictive capability already it doesn’t
+appear to be useful to fit additional models.
+
+## Final Position
+
+#### Driver and Constructor by Final Position
+
+    ## # A tibble: 1 x 1
+    ##   mean_pos
+    ##      <dbl>
+    ## 1     13.0
 
 ![](Final_Report_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
 
-## Linear Model by final position
+Constructor and final position have an interesting relationship that is
+not linear. There are also relatively few constructors with a mean final
+position of less than the overall average final position.
 
-\\TODO: Using final position in the race as our metric of performance,
-the linear model relating driver and final position has an rsquare of
-0.25 …
+#### Modelling by Final Position
 
-#### Uncertainty Quantification / Prediction Interval
+#### Probability Intervals
 
 If possible given your data, report all estimates with confidence /
 prediction / tolerance intervals. If not possible, clearly explain why
