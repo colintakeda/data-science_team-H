@@ -2,25 +2,10 @@ Lilo Heinrich, Tim Novak, and Colin Takeda
 12-14-2020
 
   - [Data Background](#data-background)
-      - [Context](#context)
-      - [Source](#source)
   - [Investigation Question](#investigation-question)
-      - [Does the car or the driver have the greater
-        impact?](#does-the-car-or-the-driver-have-the-greater-impact)
   - [Data Tidying](#data-tidying)
-      - [Time data](#time-data)
-      - [Potential Problems](#potential-problems)
   - [Exploratory Data Analysis](#exploratory-data-analysis)
-      - [Standardized Average Lap Time](#standardized-average-lap-time)
-      - [Standardized Average Lap Time by
-        Circuit](#standardized-average-lap-time-by-circuit)
-      - [Modeling by standard average lap
-        time](#modeling-by-standard-average-lap-time)
-      - [Modeling Using Final Position
-        Order](#modeling-using-final-position-order)
   - [Final Position](#final-position)
-      - [Modelling by Final Position](#modelling-by-final-position)
-      - [Probability Intervals](#probability-intervals)
   - [Conclusion](#conclusion)
   - [Rubrics](#rubrics)
 
@@ -188,7 +173,7 @@ deviation, and \(z\) is the standard score of \(x\)
 
 #### Standardized Average Lap Time by Circuit
 
-![](Final_Report_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
+![](Final_Report_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
 
 The graph above shows a visual comparison of standardized average lap
 time by circuit. The slope of the median is small in magnitude relative
@@ -196,10 +181,11 @@ to the range of the standardized average lap time, showing that
 standardizing the average lap time successfully minimizes the effect of
 circuit.
 
-#### Modeling by standard average lap time
+#### Modeling by Standard Average Lap Time
 
-First, let’s model the ***entire data set*** to get a sense of how
-informative a linear model is for our dataset, solely based upon driver,
+First, let’s model the a subset of the data that has completed times to
+get a sense of how informative a linear model of **standarderized
+average lap time** is for our dataset, solely based upon driver,
 constructor, and a combination of the two.
 
 ``` r
@@ -225,68 +211,114 @@ f_drivcons_sal <-
   )
 ```
 
-    ## Full Fit - Just Driver
+    ## Subset Fit - Just Driver
 
-    ##   Rsquare 0.05748965
+    ##   Rsquare 0.05762464
 
-    ##   MSE 0.9387334
+    ##   MSE 1.133674
 
-    ## Full Fit - Just Constructor
+    ## Subset Fit - Just Constructor
 
-    ##   Rsquare 0.04633339
+    ##   Rsquare 0.04821027
 
-    ##   MSE 0.9498449
+    ##   MSE 1.145
 
-    ## Full Fit - Driver and Constructor
+    ## Subset Fit - Driver and Constructor
 
-    ##   Rsquare 0.08119187
+    ##   Rsquare 0.08991716
 
-    ##   MSE 0.9151261
+    ##   MSE 1.094826
 
 Starting with looking at the mean square error (MSE) we can compare the
 different fits against one another. Between fits, the error is lowest
-with both `driver and constructor`. The “goodness of fit” is best with
+with both *driver and constructor*. The “goodness of fit” is best with
 both factors involved, which may imply that both are informative towards
 standard average lap time. However, the difference is quite small
-between MSEs, so the predictive capabilities of both at all still seem
-minute. The order of best fit to worst, solely based upon MSE, is driver
-and constructor, just driver, and finally just constructor. These
-results may imply that driver is a better predictor of outcome than
-constructor, but this is not necessarily the case.
+between MSEs, so the predictive capabilities of both still seem minute.
+The order of best to worst fit, solely based upon MSE, is **driver and
+constructor, just driver, and just constructor.** These results may
+imply that driver is a better predictor of outcome than constructor, but
+this is not necessarily the case.
 
-Looking next at our rsquared value we see that our models do **not**
-have very good coverage of the data. We are looking at each model only
-covering around `4.6% to 8.1%` of the data, which calls into question
-the validity the comparisons made for our MSE. The order of best model
-to worst, solely based upon rsquare, is driver and constructor, just
-driver, and finally just constructor, so the overall standings seem to
-follow the exact same trend seen in both MSE and rsquare.
+Looking next at our R-square value we see that our models *does not*
+encapsulate much of the variance of the data. We see the fraction of the
+variance of the data ranges from 4.8% to 8.9%. The order of best to
+worst fit, solely based upon R-square, is **driver and constructor, just
+driver, and finally just constructor.**
 
 These models should be taken with a grain or more of salt as we are
-using the entire data set to create them, so we don’t have a separate
-training and validation data set. However, using a split of the dataset
-for training and the rest for validation will not increase the accuracy
-of the model. With such a low predictive capability already it doesn’t
-appear to be useful to fit additional models.
+using the entire subset of data set to create them, so they are
+extremely optimistic with the fit and do not cover all observations
+available. Also, as we see from our R-square values, using driver and/or
+constructor does not seem very fruitful for modeling standardized
+average lap time. While this was a useful metric for comparing across
+circuits, it does not seem to be as useful for modeling. Instead, we
+should explore other variables to indicate performance.
 
-#### Modeling Using Final Position Order
+## Final Position
+
+#### Modelling by Final Position
+
+Next, we will model the entire data set
 
 ``` r
 df_data_with_rows <- tibble::rowid_to_column(df_data, "ID")
 
-df_train_pos <-
+df_validate_pos <-
   df_data_with_rows %>%
-  group_by(driverId, constructorId, circuitId) %>% 
-  slice_sample(n = 1) %>% 
+  group_by(driverId, constructorId) %>% 
+  slice_sample(prop = 0.5) %>% 
   ungroup()
 
-df_validate_pos <-
+df_train_pos <-
   anti_join(
     df_data_with_rows,
-    df_train_pos,
+    df_validate_pos,
     by = "ID"
   )
+
+df_train_pos
 ```
+
+    ## # A tibble: 1,405 x 17
+    ##       ID resultId raceId driverId constructorId positionOrder  laps
+    ##    <int>    <dbl>  <dbl>    <dbl>         <dbl>         <dbl> <dbl>
+    ##  1     2    22131    900      825             1             2    57
+    ##  2     3    22132    900       18             1             3    57
+    ##  3     5    22134    900      822             3             5    57
+    ##  4     6    22135    900      807            10             6    57
+    ##  5     7    22136    900        8             6             7    57
+    ##  6     8    22137    900      818             5             8    57
+    ##  7     9    22138    900      826             5             9    57
+    ##  8    10    22139    900      815            10            10    57
+    ##  9    11    22140    900       16            15            11    56
+    ## 10    13    22142    900      820           206            13    55
+    ## # … with 1,395 more rows, and 10 more variables: fastestLapSpeed <dbl>,
+    ## #   statusId <dbl>, driver_name <chr>, constructor_name <chr>, year <dbl>,
+    ## #   round <dbl>, circuitId <dbl>, race_name <chr>, status <chr>,
+    ## #   circuit_name <chr>
+
+``` r
+df_validate_pos
+```
+
+    ## # A tibble: 1,362 x 17
+    ##       ID resultId raceId driverId constructorId positionOrder  laps
+    ##    <int>    <dbl>  <dbl>    <dbl>         <dbl>         <dbl> <dbl>
+    ##  1   727    22858    943        1           131             2    71
+    ##  2  1848    23983    999        1           131             1    67
+    ##  3  1596    23730    986        1           131             9    70
+    ##  4  1289    23420    971        1           131             2    57
+    ##  5  2528    24666   1033        1           131             1    70
+    ##  6   962    23093    956        1           131             1    71
+    ##  7   526    22656    932        1           131             1    70
+    ##  8    23    22152    901        1           131             1    56
+    ##  9  2469    24606   1030        1           131             1    55
+    ## 10  1140    23271    964        1           131             3    53
+    ## # … with 1,352 more rows, and 10 more variables: fastestLapSpeed <dbl>,
+    ## #   statusId <dbl>, driver_name <chr>, constructor_name <chr>, year <dbl>,
+    ## #   round <dbl>, circuitId <dbl>, race_name <chr>, status <chr>,
+    ## #   circuit_name <chr>
 
 ``` r
 f_driv_pos <-
@@ -313,27 +345,67 @@ f_drivcons_pos <-
 
     ## Train Fit - Just Driver
 
-    ##   Rsquare 0.1535804
+    ##   Rsquare 0.3722665
 
-    ##   MSE 46.92211
+    ##   MSE 21.53272
 
     ## Train Fit - Just Constructor
 
-    ##   Rsquare 0.1657483
+    ##   Rsquare 0.3899165
 
-    ##   MSE 46.74937
+    ##   MSE 20.9296
 
     ## Train Fit - Driver and Constructor
 
-    ##   Rsquare 0.1903318
+    ##   Rsquare 0.4102879
 
-    ##   MSE 44.4221
+    ##   MSE 20.22789
 
-## Final Position
+#### Prediction Interval
 
-#### Modelling by Final Position
+    ## Warning in predict.lm(model, data): prediction from a rank-deficient fit may be
+    ## misleading
 
-#### Probability Intervals
+    ## # A tibble: 1,362 x 21
+    ##       ID resultId raceId driverId constructorId positionOrder  laps
+    ##    <int>    <dbl>  <dbl>    <dbl>         <dbl>         <dbl> <dbl>
+    ##  1   727    22858    943        1           131             2    71
+    ##  2  1848    23983    999        1           131             1    67
+    ##  3  1596    23730    986        1           131             9    70
+    ##  4  1289    23420    971        1           131             2    57
+    ##  5  2528    24666   1033        1           131             1    70
+    ##  6   962    23093    956        1           131             1    71
+    ##  7   526    22656    932        1           131             1    70
+    ##  8    23    22152    901        1           131             1    56
+    ##  9  2469    24606   1030        1           131             1    55
+    ## 10  1140    23271    964        1           131             3    53
+    ## # … with 1,352 more rows, and 14 more variables: fastestLapSpeed <dbl>,
+    ## #   statusId <dbl>, driver_name <chr>, constructor_name <chr>, year <dbl>,
+    ## #   round <dbl>, circuitId <dbl>, race_name <chr>, status <chr>,
+    ## #   circuit_name <chr>, pred <dbl>, pred_driv <dbl>, pred_cons <dbl>,
+    ## #   pred_drivcons <dbl>
+
+![](Final_Report_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
+
+    ## # A tibble: 1,405 x 20
+    ##       ID resultId raceId driverId constructorId positionOrder  laps
+    ##    <int>    <dbl>  <dbl>    <dbl>         <dbl>         <dbl> <dbl>
+    ##  1     2    22131    900      825             1             2    57
+    ##  2     3    22132    900       18             1             3    57
+    ##  3     5    22134    900      822             3             5    57
+    ##  4     6    22135    900      807            10             6    57
+    ##  5     7    22136    900        8             6             7    57
+    ##  6     8    22137    900      818             5             8    57
+    ##  7     9    22138    900      826             5             9    57
+    ##  8    10    22139    900      815            10            10    57
+    ##  9    11    22140    900       16            15            11    56
+    ## 10    13    22142    900      820           206            13    55
+    ## # … with 1,395 more rows, and 13 more variables: fastestLapSpeed <dbl>,
+    ## #   statusId <dbl>, driver_name <chr>, constructor_name <chr>, year <dbl>,
+    ## #   round <dbl>, circuitId <dbl>, race_name <chr>, status <chr>,
+    ## #   circuit_name <chr>, pi_fit <dbl>, pi_lwr <dbl>, pi_upr <dbl>
+
+![](Final_Report_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
 
 If possible given your data, report all estimates with confidence /
 prediction / tolerance intervals. If not possible, clearly explain why
@@ -384,3 +456,5 @@ Styled:
 
   - (The usual stuff)
   - Report must contain at least one presentation-quality figure
+
+> > > > > > > 0186163de513b72013cb76d44c3cda1f8b393891
