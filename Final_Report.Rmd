@@ -225,7 +225,7 @@ df_cleanLapTimes %>%
   labs(x = "Vehicle Driver Name", y = "Final Position Ranking")
 ```
 
-We can see that when we plot the final position vs the driver of the vehicle there does seem to be a correlation. in that some drivers tend to outperform the average and some drivers tend to underperform the average. If we examine the names the highly performing racers tend to be the racers more well renown for their skill such as [Louis Hamelton]() and [](). This suggests that there is a correlation between the driver performance and the standing in the race and we can see this play out in the relatively linear relation between the two variables. An interesting relation we can see in the data are 'plateaus' in the median values where there are sets of drivers with similar performances. 
+We can see that when we plot the final position vs the driver of the vehicle there does seem to be a correlation. in that some drivers tend to outperform the average and some drivers tend to underperform the average. If we examine the names the highly performing racers tend to be the racers more well renown for their skill such as [Lewis Hamilton](https://en.wikipedia.org/wiki/Lewis_Hamilton) and [Nico Rosberg](https://en.wikipedia.org/wiki/Nico_Rosberg). This suggests that there is a correlation between the driver performance and the standing in the race and we can see this play out in the relatively linear relation between the two variables. An interesting relation we can see in the data are 'plateaus' in the median values where there are sets of drivers with similar performances. 
 
 ```{r echo=FALSE}
 df_cleanLapTimes %>%
