@@ -21,12 +21,11 @@ Lilo Heinrich, Tim Novak, and Colin Takeda
   - [Final Position Order](#final-position-order)
       - [Driver and Constructor by Final Position
         Order](#driver-and-constructor-by-final-position-order)
-      - [Modelling by Final Position
-        Order](#modelling-by-final-position-order)
-      - [Prediction Interval](#prediction-interval)
-      - [Assessing Final Position Order
-        Models](#assessing-final-position-order-models)
-      - [Quantifying uncertainty](#quantifying-uncertainty)
+      - [Modeling by Final Position
+        Order](#modeling-by-final-position-order)
+      - [Predicted vs Actual Final Position
+        Order](#predicted-vs-actual-final-position-order)
+      - [Prediction Intervals](#prediction-intervals)
   - [Questions Remaining](#questions-remaining)
   - [Conclusion](#conclusion)
 
@@ -46,11 +45,14 @@ impact?
 #### Context
 
 The Formula 1 World Championship has been one of the premier forms of
-auto racing around the world since its inaugural season in 1950. The
-word “formula” refers to the set of rules to which all participants’
-cars must conform. A Formula 1 season consists of a series of Grands
-Prix races which take place worldwide on circuits and closed public
-roads.
+auto racing around the world since its first season in 1950. The word
+“formula” refers to the set of rules that the participants’ cars must
+conform to. Each Formula 1 season consists of a series of Grands Prix
+races that take place worldwide on racing circuits and closed public
+roads. Formula 1 is one of the most popular sports in the world, with
+over [450 million TV
+viewers](https://digital.hbs.edu/platform-digit/submission/formula-1-speeding-towards-esports-success/)
+in 2020.
 
 #### Data Source
 
@@ -100,22 +102,25 @@ missing values with `NA`.
 
 In our dataset we kept these columns:
 
-  - `resultId`
-  - `raceId`
-  - `driverId`
-  - `constructorId`
-  - `positionOrder`
-  - `laps`
-  - `fastestLapSpeed`
-  - `statusId`
-  - `driver_name`
-  - `constructor_name`
-  - `year`
-  - `round`
-  - `circuitId`
-  - `race_name`
-  - `status`
-  - `circuit_name`
+  - `raceId` & `race_name` The ID number and corresponding name of the
+    race
+  - `driverId` & `driver_name` The ID number and corresponding driver’s
+    name
+  - `constructorId` & `constructor_name` The car constructor’s ID number
+    and name
+  - `positionOrder` The final position order of the race, describing the
+    order the racers finished in.
+      - Racers that completed the most laps and in the fastest time
+        receive the highest positions.
+  - `laps` The number of full laps completed
+  - `fastestLapSpeed` The speed in km/hr of the racer’s fastest lap of
+    the race
+  - `statusId` & `status` The status ID number and name.
+      - Examples of status name: “Finished”, “Collision”,
+        “Disqualified”, or “Engine” (experienced engine problems)
+  - `year` The year of the race
+  - `circuitId` & `circuit_name` The circuit’s ID number and
+    corresponding name
 
 #### Time data
 
@@ -132,13 +137,14 @@ removed these observations. Overall, we still only have lap times for
 
 In this time-filtered dataset we added these columns:
 
-  - `total_time` the total time of a race in milliseconds
-  - `avg_lap` the average lap time for a individual race in milliseconds
-  - `circuit_avg_lap` the average lap time for a individual circuit in
+  - `total_time` The total time of a race in milliseconds
+  - `avg_lap` The average lap time for an individual race in
     milliseconds
-  - `circuit_lap_sd` the standard deviation of the average lap time in
+  - `circuit_avg_lap` The average lap time for a individual circuit in
     milliseconds
-  - `std_avg_lap` the standardized average lap time \[unitless\]
+  - `circuit_lap_sd` The standard deviation of the average lap time in
+    milliseconds
+  - `std_avg_lap` The standardized average lap time \[unitless\]
 
 #### Changes in racing ruleset/vehicle design through the years
 
@@ -156,10 +162,19 @@ Thus we filtered our data to only examine the data from 2014 onwards.
 
   - Some examples of [constructor name
     changes](https://www.reddit.com/r/formula1/comments/1dos3r/i_made_a_diagram_to_show_how_current_f1_teams/)
+      - Our dataset does not include the aliases or previous names of
+        constructors, so we are unable to account for this
+        relationship.  
   - New drivers are skewed because they don’t have as many data points
     yet
+      - The more datapoints we have on each driver, the better we can
+        characterize their performance. New drivers have fewer known
+        datapoints, so their predictions will have a higher level of
+        uncertainty.
   - Teams and drivers are correlated, in that the best drivers tend to
     get hired by the best teams
+      - This confluence between team and driver may make it difficult to
+        separate the impact of driver and constructor.
 
 -----
 
@@ -169,8 +184,13 @@ Thus we filtered our data to only examine the data from 2014 onwards.
 
 ![](Final_Report_files/figure-gfm/finish%20race-1.png)<!-- -->
 
+    ## # A tibble: 1 x 1
+    ##   percent_finishrace
+    ##                <dbl>
+    ## 1               80.4
+
 As shown in the graph above, final position is heavily reliant on how
-many laps the driver was able to complete. And almost a third of the
+many laps the driver was able to complete. And almost a fifth of the
 time, collisions or car troubles put drivers out of commission before
 the race is finished. These final standings are not reflective of how
 well the driver was doing before that point, so we decided to use
@@ -270,38 +290,37 @@ should explore other variables to indicate performance.
 We can see that when we plot the final position vs the driver of the
 vehicle there does seem to be a correlation. in that some drivers tend
 to outperform the average and some drivers tend to underperform the
-average. If we examine the names the highly performing racers tend to be
-the racers more well renown for their skill such as [Lewis
+average. If we examine the names, the highly performing racers tend to
+be the racers more well renown for their skill, such as [Lewis
 Hamilton](https://en.wikipedia.org/wiki/Lewis_Hamilton) and [Nico
 Rosberg](https://en.wikipedia.org/wiki/Nico_Rosberg). This suggests that
 there is a correlation between the driver performance and the standing
-in the race and we can see this play out in the relatively linear
+in the race, and that we can see this play out in the relatively linear
 relation between the two variables. An interesting relation we can see
 in the data are ‘plateaus’ in the median values where there are sets of
-drivers with similar performances.
+drivers with similar performance.
 
 ![](Final_Report_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
 
-When we plot the constructor vs the final position order we see
-generally that the higher performing constructors are associated with a
-low position order, and the lower performing constructors are associated
-with a lower position order, however this is not a linear relationship.
-The highest performing constructors account for most of the low final
-position orders and the lowest performing constructors account for much
-of the high final position orders. But middle performing constructors
-all seem to have similar performance.
+When we plot the constructor by the final position order, we see
+generally that the higher performing constructors are associated with
+lower position order, and the lower performing constructors are
+associated with higher position order. However this is not a linear
+relationship. The highest performing constructors account for most of
+the low final position orders and the lowest performing constructors
+account for much of the high final position orders, but middle
+performing constructors all seem to have similar performance.
 
 Taken together we can see that the driver and constructor graphs are
 correlated with the final position order so it is likely that both of
-them help account for the final position order, but they might not be
-the sole determining factors. The more linear relationship of driver
-with final position order suggests that the driver is slightly more
-predictive of the final position order than the less linear vehicle
-constructor.
+them help account for the final position order, but are not the sole
+determining factors. The more linear relationship of driver with final
+position order suggests that the driver is slightly more predictive of
+the final position order than the less linear vehicle constructor.
 
-#### Modelling by Final Position Order
+#### Modeling by Final Position Order
 
-Next, we will model the entire data set
+Next, we will apply a linear model on the entire data set.
 
     ## Train Fit - Just Driver
 
@@ -325,63 +344,80 @@ After multiple samples we see that the R-squared values for just driver
 and just constructor tend to range from 30% to 37% and a MSE that ranges
 from 22 to 24. The just driver and just constructor fits seem to be very
 close in R-squared values and MSE to one another and there is no
-significant difference between the two. In comparison, driver and
-constructor has an R-squared value that tends to range from 33% to 41%
-and a MSE of 20 to 23. The driver and constructor fit tends to always be
-better than either the just driver or just constructor fit. Overall, the
-the range of values for the driver and constructor fit is promising
-given the multitude of outside factors in racing that is not covered by
-the investigated factors.
+significant difference between the two.
 
-#### Prediction Interval
+In comparison, driver and constructor has an R-squared value that tends
+to range from 33% to 41% and a MSE of 20 to 23. The driver and
+constructor fit tends to always be better than either the just driver or
+just constructor fit.
 
-    ## Train Fit - Just Driver
+Overall, the the range of values for the driver and constructor fit is
+promising given the multitude of outside factors in racing that are not
+covered by the investigated factors.
 
-    ##   Rsquare 0.3464126
+#### Predicted vs Actual Final Position Order
 
-    ##   MSE 23.39755
+![](Final_Report_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->![](Final_Report_files/figure-gfm/unnamed-chunk-8-2.png)<!-- -->
 
-    ## Train Fit - Just Constructor
+![](Final_Report_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
 
-    ##   Rsquare 0.3488549
+Above are the visualizations of the actual vs. predicted final position
+of our three linear models, with a line through the axis of symmetry
+showing where the predicted and actual positions are equal. Comparing
+the distance from each datapoint to the line of symmetry, we can see
+that there is a weak linear correlation between the predicted and actual
+final position in all three models. Interestingly, the shape of the
+training data closely resembles the shape of the validation data.
 
-    ##   MSE 23.30775
+In all of the models, there are very few predicted final positions below
+5th place or above 20th place; nearly all of the predicted positions
+fall in the middle of the range of possible values. This makes sense,
+because a driver or constructor’s performance would have to be either
+consistently great or consistently terrible to have achieved a very high
+or very low average ranking.
 
-    ## Train Fit - Driver and Constructor
+For the model of constructor-only, there are tall vertical
+stratifications in predicted final position. This is because the range
+of final positions that each constructor achieves is typically wider
+than one position value, yet the linear model only assigns a single
+coefficient to each constructor, causing all of the datapoints of each
+constructor to assume the constructor’s mean position value. This poor
+fit is an inherent limitation of reducing the constructors to linear
+variables. The same problem applies to considering drivers as linear
+variables.
 
-    ##   Rsquare 0.3817959
-
-    ##   MSE 22.13336
-
-#### Assessing Final Position Order Models
-
-![](Final_Report_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->![](Final_Report_files/figure-gfm/unnamed-chunk-9-2.png)<!-- -->![](Final_Report_files/figure-gfm/unnamed-chunk-9-3.png)<!-- -->
-Above is a visualization of the actual vs. predicted final position of
-our linear models. The shape of the training data graph closely
-resembles the shape of the validation data graph in all 3 cases.
-
-For the model with the input of only constructor, there are horizontal
-stratifications showing up at different predicted final positions. This
-is because there are only 17 constructors, …
-
-In the graph of the driver and constructor model, there is a noticeable
-gap in predictions between fourth and sixth place …
-
-#### Quantifying uncertainty
+#### Prediction Intervals
 
 ![](Final_Report_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
 
-The graph above shows the predicted final position as well as the
-prediction interval for each drier-constructor pair in our data. While
-we are able to compute the prediction intervals on all possible inputs
-to our model, we have had a hard time finding a way to create an
-effective visual comparing these prediction intervals to the actual
-final position.
+While we are able to compute the prediction intervals on the inputs to
+our model, we had a hard time creating an effective visual to compare
+the predictions to actual final position in a meaningful way due to the
+large number of levels. The graph above shows the position prediction
+intervals for each driver-constructor pair, ordered from lowest to
+highest predicted value. Graphing the final position on top of the
+prediction intervals, we can see that the coverage of the prediction
+intervals on the validation data is good, with the majority of
+datapoints falling inside the prediction interval.
 
-If possible given your data, report all estimates with confidence /
-prediction / tolerance intervals. If not possible, clearly explain why
-it is not possible to provide intervals and document what sources of
-uncertainty are not quantified.
+However, there is a group of high outliers occurring above several of
+the driver-constructor pairs with the lowest predicted positions. The
+prediction intervals with a lower bound below 0 have much less coverage
+of the actual position data, making up most of the outliers seen. It
+makes sense that if the predicted value is low, the lower prediction
+bound will shift into the negative numbers. However, achieving a
+negative position in the race is not possible. Prediction intervals are
+intended for normally distributed data so the asymmetrical distribution
+of these driver-constructor pairs renders them less effective.
+
+The average size of these prediction intervals is approximately 15
+positions which is large considering that there are less than 30
+possible positions to take in each race. This tells us that the range of
+our data is quite wide in comparison to the range of possible values,
+unfortunately meaning that the error in our predictions is also
+relatively large.
+
+-----
 
 ## Questions Remaining
 
@@ -389,7 +425,7 @@ uncertainty are not quantified.
     overall trend of the data?
   - Can you look at track changes over the years and effects on lap
     times?
-  - How much does starting position have an effect on the final ending
+  - How much does starting position have an effect on the final/ending
     position?
   - Using the history of an individual driver’s performances can you
     predict their lap times in future races?
@@ -403,8 +439,8 @@ driver has a greater impact on overall performance. The answer that we
 came to is that both have a sizable impact on performance, and their
 individual significance cannot be easily isolated using simple models.
 Our models demonstrate that using either driver or constructor on its
-own is a significant predictor for final position order. (which one is a
-better approximation relies on your sampling received in your train test
+own is a significant predictor for final position order. (Which one is a
+better approximation relies on the sampling made in the train-test
 split). A model using the combination of both variables as a predictor
 served as the strongest predictor of final position, however it still
 did not sufficiently account for the final position of the vehicles. If
