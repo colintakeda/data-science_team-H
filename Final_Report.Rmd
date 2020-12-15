@@ -443,7 +443,7 @@ For the model of constructor-only, there are tall vertical stratifications in pr
 
 #### Prediction Intervals
 
-```{r warning=FALSE, fig.width=16, fig.height=13, echo=FALSE}
+```{r warning=FALSE, fig.width=16, fig.height=10, echo=FALSE}
 #df_validate_pos %>%
 #    add_uncertainties(f_driv_pos, interval = "prediction", prefix = "pi")
 
