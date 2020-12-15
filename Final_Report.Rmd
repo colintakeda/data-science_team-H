@@ -462,7 +462,7 @@ bind_rows(
   ) +
   geom_count(aes(drivcons_name, positionOrder, color="Actual Position")) +
   geom_point(aes(color="Predicted Position", size=10)) +
-  facet_grid(~ model, labeller = label_both) +
+  #facet_grid(~ model, labeller = label_both) +
   theme_minimal() +
   labs(
     title = "Prediction Intervals on Driver-Constructor Pair",
