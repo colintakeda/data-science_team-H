@@ -16,8 +16,8 @@ knitr::opts_chunk$set(echo = FALSE)
 library(tidyverse)
 library(modelr)
 
-df_timedata <- read_csv("processed_data/std_avg_laptime.csv")
-df_data <- read_csv("processed_data/clean_f1.csv")
+df_timedata <- read_csv("processed_data/std_avg_laptime.csv") %>% filter(year >= 2014)
+df_data <- read_csv("processed_data/clean_f1.csv") %>% filter(year >= 2014)
 ```
 
 ## Data Background
@@ -206,23 +206,28 @@ Looking next at our rsquared value we see that our models do **not** have very g
 
 These models should be taken with a grain or more of salt as we are using the entire data set to create them, so we don't have a separate training and validation data set. However, using a split of the dataset for training and the rest for validation will not increase the accuracy of the model. With such a low predictive capability already it doesn't appear to be useful to fit additional models.
 
+## Final Position Order
+
 #### Modeling Using Final Position Order
 
 ```{r split data into train & validate, echo = TRUE }
 df_data_with_rows <- tibble::rowid_to_column(df_data, "ID")
 
-df_train_pos <-
+df_validate_pos <-
   df_data_with_rows %>%
-  group_by(driverId, constructorId, circuitId) %>% 
-  slice_sample(n = 1) %>% 
+  group_by(driverId, constructorId) %>% 
+  slice_sample(prop = 0.5) %>% 
   ungroup()
 
-df_validate_pos <-
+df_train_pos <-
   anti_join(
     df_data_with_rows,
-    df_train_pos,
+    df_validate_pos,
     by = "ID"
   )
+
+df_train_pos
+df_validate_pos
 ```
 
 ```{r modeling using positionOrder, echo = TRUE}
@@ -266,7 +271,66 @@ cat("  MSE", mse(f_drivcons_pos, df_validate_pos), "\n")
 
 #### Modelling by Final Position
 
-#### Probability Intervals
+#### Prediction Interval
+
+```{r}
+## Helper function to compute uncertainty bounds
+add_uncertainties <- function(data, model, prefix = "pred", ...) {
+  df_fit <-
+    stats::predict(model, data, ...) %>%
+    as_tibble() %>%
+    rename_with(~ str_c(prefix, "_", .))
+
+  bind_cols(data, df_fit)
+}
+```
+
+```{r}
+df_pred_driv <-
+  df_validate_pos %>%
+  add_predictions(f_driv_pos)
+#df_pred_driv
+
+df_pred_cons <-
+  df_validate_pos %>%
+  add_predictions(f_cons_pos)
+#df_pred_cons
+
+df_pred_drivcons <-
+  df_validate_pos %>%
+  add_predictions(f_drivcons_pos)
+#df_pred_drivcons
+
+df_pred_drivcons %>%
+  ggplot() + 
+  geom_point(aes(x=positionOrder, y=pred)) +
+  geom_point(data = df_pred_driv, aes(x=positionOrder, y=pred, color = 'r')) +
+  geom_point(data = df_pred_cons, aes(x=positionOrder, y=pred, color = 'b')) +
+  geom_abline(intercept = 0, slope=1) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+
+
+df_intervals <-
+  df_train_pos %>%
+  add_uncertainties(f_cons_pos, interval = "prediction", prefix = "pi")
+
+df_intervals %>%
+  mutate(constructor_name = fct_reorder(constructor_name, positionOrder)) %>%
+  ggplot(aes(x=constructor_name, y=positionOrder)) +
+  geom_errorbar(
+     aes(ymin = pi_lwr, ymax = pi_upr, color=''),
+      width = 0.5,
+      size = 1
+  ) +
+  geom_point(
+    data = df_validate_pos,
+    mapping = aes(x=constructor_name, y=positionOrder),
+    size = 0.3
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+
+```
 
 If possible given your data, report all estimates with confidence / prediction / tolerance intervals. If not possible, clearly explain why it is not possible to provide intervals and document what sources of uncertainty are not quantified.
 
@@ -275,7 +339,7 @@ If possible given your data, report all estimates with confidence / prediction /
 
 ## Conclusion
 
-testing testing testing
+
 
 ----------------------------------------
 

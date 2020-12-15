@@ -1,3 +1,5 @@
+Lilo Heinrich, Tim Novak, and Colin Takeda
+12-14-2020
 
   - [Data Background](#data-background)
       - [Context](#context)
@@ -12,13 +14,11 @@
       - [Standardized Average Lap Time](#standardized-average-lap-time)
       - [Standardized Average Lap Time by
         Circuit](#standardized-average-lap-time-by-circuit)
-      - [Driver and Constructor by Standardized Average Lap
-        Time](#driver-and-constructor-by-standardized-average-lap-time)
-      - [Modelling by standard average lap
-        time](#modelling-by-standard-average-lap-time)
+      - [Modeling by standard average lap
+        time](#modeling-by-standard-average-lap-time)
+      - [Modeling Using Final Position
+        Order](#modeling-using-final-position-order)
   - [Final Position](#final-position)
-      - [Driver and Constructor by Final
-        Position](#driver-and-constructor-by-final-position)
       - [Modelling by Final Position](#modelling-by-final-position)
       - [Probability Intervals](#probability-intervals)
   - [Conclusion](#conclusion)
@@ -136,11 +136,15 @@ In this time-filtered dataset we added these columns:
 
   - Some examples of [constructor name
     changes](https://www.reddit.com/r/formula1/comments/1dos3r/i_made_a_diagram_to_show_how_current_f1_teams/)
-  - Rules Era can change performance
+
+  - Rules change year to year and can significantly affect performance
+
   - New drivers are skewed because they don’t have as many data points
     yet
+
   - This data is for 70 years of races and [formula racing has changed a
     lot](https://youtu.be/hgLQWIAaCmY)
+    
       - Consider filtering on year \>= 2000
 
 -----
@@ -192,46 +196,63 @@ to the range of the standardized average lap time, showing that
 standardizing the average lap time successfully minimizes the effect of
 circuit.
 
-#### Driver and Constructor by Standardized Average Lap Time
+#### Modeling by standard average lap time
 
-    ## Warning: Removed 384 rows containing non-finite values (stat_boxplot).
+First, let’s model the ***entire data set*** to get a sense of how
+informative a linear model is for our dataset, solely based upon driver,
+constructor, and a combination of the two.
 
-![](Final_Report_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
+``` r
+f_driv_sal <-
+  df_timedata %>%
+  lm(
+    data = .,
+    formula = std_avg_lap ~ as.factor(driverId)
+  )
 
-Constructor and standardized average lap time appear to have a positive
-and fairly linear relationship. This makes sense because standardizing
-should correct the distribution to become more linear. Seeing that
-constructor has an impact on standard average lap time is a good sign
-because it indicates that there may be some causality and therefore also
-predictive capability.
+f_cons_sal <- 
+  df_timedata %>% 
+  lm(
+    data = .,
+    formula = std_avg_lap ~ as.factor(constructorId)
+  )
 
-#### Modelling by standard average lap time
+f_drivcons_sal <- 
+  df_timedata %>% 
+  lm(
+    data = .,
+    formula = std_avg_lap ~ as.factor(driverId) + as.factor(constructorId)
+  )
+```
 
-    ## [1] "Full Fit - Just Driver"
+    ## Full Fit - Just Driver
 
-    ## Rsquare 0.05748965
+    ##   Rsquare 0.05748965
 
-    ## MSE 0.9387334
+    ##   MSE 0.9387334
 
-    ## [1] "Full Fit - Just Constructor"
+    ## Full Fit - Just Constructor
 
-    ## Rsquare 0.04633339
+    ##   Rsquare 0.04633339
 
-    ## MSE 0.9498449
+    ##   MSE 0.9498449
 
-    ## [1] "Full Fit - Driver and Constructor"
+    ## Full Fit - Driver and Constructor
 
-    ## Rsquare 0.08119187
+    ##   Rsquare 0.08119187
 
-    ## MSE 0.9151261
+    ##   MSE 0.9151261
 
-Looking at our mean square error first we can compare our different
-models against one another. Between models, the error is lowest with
-both `driver and constructor` which is a good sign that both are
-informative towards lap time. The order of best model to worst, solely
-based upon MSE, is driver and constructor, just driver, and finally just
-constructor. These results may imply that driver is a better predictor
-of outcome than constructor, but this is not necessarily the case.
+Starting with looking at the mean square error (MSE) we can compare the
+different fits against one another. Between fits, the error is lowest
+with both `driver and constructor`. The “goodness of fit” is best with
+both factors involved, which may imply that both are informative towards
+standard average lap time. However, the difference is quite small
+between MSEs, so the predictive capabilities of both at all still seem
+minute. The order of best fit to worst, solely based upon MSE, is driver
+and constructor, just driver, and finally just constructor. These
+results may imply that driver is a better predictor of outcome than
+constructor, but this is not necessarily the case.
 
 Looking next at our rsquared value we see that our models do **not**
 have very good coverage of the data. We are looking at each model only
@@ -248,20 +269,67 @@ for training and the rest for validation will not increase the accuracy
 of the model. With such a low predictive capability already it doesn’t
 appear to be useful to fit additional models.
 
+#### Modeling Using Final Position Order
+
+``` r
+df_data_with_rows <- tibble::rowid_to_column(df_data, "ID")
+
+df_train_pos <-
+  df_data_with_rows %>%
+  group_by(driverId, constructorId, circuitId) %>% 
+  slice_sample(n = 1) %>% 
+  ungroup()
+
+df_validate_pos <-
+  anti_join(
+    df_data_with_rows,
+    df_train_pos,
+    by = "ID"
+  )
+```
+
+``` r
+f_driv_pos <-
+  df_train_pos %>%
+  lm(
+    data = .,
+    formula = positionOrder ~ as.factor(driverId)
+  )
+
+f_cons_pos <- 
+  df_train_pos %>% 
+  lm(
+    data = .,
+    formula = positionOrder ~ as.factor(constructorId)
+  )
+
+f_drivcons_pos <- 
+  df_train_pos %>% 
+  lm(
+    data = .,
+    formula = positionOrder ~ as.factor(driverId) + as.factor(constructorId)
+  )
+```
+
+    ## Train Fit - Just Driver
+
+    ##   Rsquare 0.1535804
+
+    ##   MSE 46.92211
+
+    ## Train Fit - Just Constructor
+
+    ##   Rsquare 0.1657483
+
+    ##   MSE 46.74937
+
+    ## Train Fit - Driver and Constructor
+
+    ##   Rsquare 0.1903318
+
+    ##   MSE 44.4221
+
 ## Final Position
-
-#### Driver and Constructor by Final Position
-
-    ## # A tibble: 1 x 1
-    ##   mean_pos
-    ##      <dbl>
-    ## 1     13.0
-
-![](Final_Report_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
-
-Constructor and final position have an interesting relationship that is
-not linear. There are also relatively few constructors with a mean final
-position of less than the overall average final position.
 
 #### Modelling by Final Position
 
