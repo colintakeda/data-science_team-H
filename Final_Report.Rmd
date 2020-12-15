@@ -1,3 +1,8 @@
+---
+output:
+  github_document: default
+  html_document: default
+---
 =======
 ---
 title: ""
@@ -81,8 +86,13 @@ In this time-filtered dataset we added these columns:
 - circuit_lap_sd
 - std_avg_lap
 
-```{r, include=FALSE}
+```{r}
 #df_timedata %>% glimpse()
+df_data
+df_data <- df_data %>% mutate(driver_name=str_replace_all(df_data$driver_name,"[^[:graph:]]", " "))
+  #mutate(driver_name=enc2utf8(df_data$driver_name,"[^[:graph:]]", " "))
+ #mutate(driver_name=str_replace_all(df_data$driver_name,"[^[:graph:]]", " "))
+df_data
 ```
 
 #### Changes in racing ruleset/vehicle design through the years
@@ -161,7 +171,7 @@ The graph above shows a visual comparison of standardized average lap time by ci
 
 #### Modeling by Standard Average Lap Time
 
-First, let's model the a subset of the data that has completed times to get a sense of how informative a linear model of **standarderized average lap time** is for our dataset, solely based upon driver, constructor, and a combination of the two.
+First, let's model the a subset of the data that has completed times to get a sense of how informative a linear model of **standardized average lap time** is for our dataset, solely based upon driver, constructor, and a combination of the two.
 
 ```{r modeling a subset of the data, echo = TRUE}
 
@@ -214,7 +224,6 @@ These models should be taken with a grain or more of salt as we are using the en
 dataFile <- "processed_data/clean_f1.csv"
 df_cleanLapTimes <- read.csv(dataFile)
 ```
-
 
 ```{r fig.width = 20,fig.height=15, echo=FALSE}
 df_cleanLapTimes %>%
@@ -303,7 +312,7 @@ cat("  Rsquare", rsquare(f_drivcons_pos, df_validate_pos), "\n")
 cat("  MSE", mse(f_drivcons_pos, df_validate_pos), "\n")
 ```
 
-#### Prediction Interval
+#### Assessing Final Position Order Models
 
 ```{r}
 ## Helper function to compute uncertainty bounds
@@ -317,7 +326,7 @@ add_uncertainties <- function(data, model, prefix = "pred", ...) {
 }
 ```
 
-```{r}
+```{r warning=FALSE, echo=FALSE}
 df_preds <-
   df_validate_pos %>%
   add_predictions(f_driv_pos) %>%
@@ -326,44 +335,135 @@ df_preds <-
   mutate(pred_cons = pred) %>%
   add_predictions(f_drivcons_pos) %>%
   mutate(pred_drivcons = pred)
-df_preds
+#df_preds
 
-df_preds %>%
-  ggplot() + 
-  geom_point(aes(x=positionOrder, y=pred_driv)) +
-  geom_point(aes(x=positionOrder, y=pred_cons, color = 'r')) +
-  geom_point(aes(x=positionOrder, y=pred_drivcons, color = 'b')) +
-  geom_abline(intercept = 0, slope=1) +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
-```
 
-```{r}
-df_intervals <-
+bind_rows(
+  df_train_pos %>%
+    add_uncertainties(f_driv_pos, interval = "prediction", prefix = "pi") %>%
+    select(positionOrder, pi_lwr, pi_fit, pi_upr) %>%
+    mutate(model = "training data"),
+  df_validate_pos %>%
+    add_uncertainties(f_driv_pos, interval = "prediction", prefix = "pi") %>%
+    select(positionOrder, pi_lwr, pi_fit, pi_upr) %>%
+    mutate(model = "validate data"),
+) %>%
+  ggplot(aes(positionOrder, pi_fit)) +
+  geom_abline(slope = 1, intercept = 0, color = "grey80", size = 2) +
+#  geom_errorbar(
+#    aes(ymin = pi_lwr, ymax = pi_upr),
+#    width = 0
+#  ) +
+  geom_point() +
+  xlim(0,25) +
+  ylim(0,25) +
+  facet_grid(~ model, labeller = label_both) +
+  theme_minimal() +
+  labs(
+    title = "Predicted vs Actual Final Position of Driver-only Model",
+    x = "Actual Final Position",
+    y = "Predicted Final Position"
+  )
+
+bind_rows(
+  df_train_pos %>%
+    add_uncertainties(f_cons_pos, interval = "prediction", prefix = "pi") %>%
+    select(positionOrder, pi_lwr, pi_fit, pi_upr) %>%
+    mutate(model = "training data"),
+  df_validate_pos %>%
+    add_uncertainties(f_cons_pos, interval = "prediction", prefix = "pi") %>%
+    select(positionOrder, pi_lwr, pi_fit, pi_upr) %>%
+    mutate(model = "validate data"),
+) %>%
+  ggplot(aes(positionOrder, pi_fit)) +
+  geom_abline(slope = 1, intercept = 0, color = "grey80", size = 2) +
+#  geom_errorbar(
+#    aes(ymin = pi_lwr, ymax = pi_upr),
+#    width = 0
+#  ) +
+  geom_point() +
+  xlim(0,25) +
+  ylim(0,25) +
+  facet_grid(~ model, labeller = label_both) +
+  theme_minimal() +
+  labs(
+    title = "Predicted vs Actual Final Position of Constructor-only Model",
+    x = "Actual Final Position",
+    y = "Predicted Final Position"
+  )
+
+bind_rows(
+  df_train_pos %>%
+    add_uncertainties(f_drivcons_pos, interval = "prediction", prefix = "pi") %>%
+    select(positionOrder, pi_lwr, pi_fit, pi_upr) %>%
+    mutate(model = "training data"),
+  df_validate_pos %>%
+    add_uncertainties(f_drivcons_pos, interval = "prediction", prefix = "pi") %>%
+    select(positionOrder, pi_lwr, pi_fit, pi_upr) %>%
+    mutate(model = "validate data"),
+) %>%
+  ggplot(aes(positionOrder, pi_fit)) +
+  geom_abline(slope = 1, intercept = 0, color = "grey80", size = 2) +
+#  geom_errorbar(
+#    aes(ymin = pi_lwr, ymax = pi_upr),
+#    width = 0
+#  ) +
+  geom_point() +
+  xlim(0,25) +
+  ylim(0,25) +
+  facet_grid(~ model, labeller = label_both) +
+  theme_minimal() +
+  labs(
+    title = "Predicted vs Actual Final Position of Driver and Constructor Model",
+    x = "Actual Final Position",
+    y = "Predicted Final Position"
+  )
+
+df_intervals_cons <-
   df_validate_pos %>%
   add_uncertainties(f_cons_pos, interval = "prediction", prefix = "pi")
-  #mutate(pi_fit_cons = pi_fit, pi_lwr_cons = pi_lwr, pi_upr_cons = pi_upr) %>%
-df_intervals
+#df_intervals_cons
 
-df_intervals %>%
-  mutate(constructor_name = fct_reorder(constructor_name, positionOrder)) %>%
-  ggplot(aes(x=constructor_name, y=positionOrder)) +
+```
+Above is a visualization of the actual vs. predicted final position of our linear models. The shape of the training data graph closely resembles the shape of the validation data graph in all 3 cases. 
+
+For the model with the input of only constructor, there are horizontal stratifications showing up at different predicted final positions. This is because there are only 17 constructors, ...
+
+In the graph of the driver and constructor model, there is a noticeable gap in predictions between fourth and sixth place ...
+
+
+#### Quantifying uncertainty
+
+
+```{r warning=FALSE, fig.width=16, fig.height=12, echo=FALSE}
+bind_rows(
+  df_validate_pos %>%
+    add_uncertainties(f_driv_pos, interval = "prediction", prefix = "pi") %>%
+    unite(drivcons_name, driver_name, constructor_name, sep=" / ") %>%
+    select(drivcons_name, positionOrder, pi_lwr, pi_fit, pi_upr) %>%
+    mutate(model = "validate data"),
+) %>%
+  mutate(drivcons_name = fct_reorder(drivcons_name, positionOrder)) %>%
+  ggplot(aes(drivcons_name, pi_fit)) +
   geom_errorbar(
-     aes(ymin = pi_lwr, ymax = pi_upr, color=''),
-      width = 0.5,
-      size = 1
+    aes(ymin = pi_lwr, ymax = pi_upr),
+    width = 0
   ) +
-  geom_point(
-    data = df_validate_pos,
-    mapping = aes(x=constructor_name, y=positionOrder),
-    size = 0.3
-  ) +
+  geom_point() +
+  #geom_point(aes(drivcons_name, positionOrder, color = 'r')) +
+  facet_grid(~ model, labeller = label_both) +
+  theme_minimal() +
+  labs(
+    title = "Prediction Intervals on Driver-Constructor Pair",
+    x = "Driver-Constructor Pair",
+    y = "Predicted Final Position"
+  ) + 
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
 
 ```
 
-If possible given your data, report all estimates with confidence / prediction / tolerance intervals. If not possible, clearly explain why it is not possible to provide intervals and document what sources of uncertainty are not quantified.
-
+The graph above shows the predicted final position as well as the prediction interval for each drier-constructor pair in our data. While we are able to compute the prediction intervals on all possible inputs to our model, we have had a hard time finding a way to create an effective visual comparing these prediction intervals to the actual final position. 
 
 ----------------------------------------
 
