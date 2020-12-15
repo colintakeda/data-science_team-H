@@ -1,10 +1,4 @@
 ---
-output:
-  github_document: default
-  html_document: default
----
-=======
----
 title: ""
 author: "Lilo Heinrich, Tim Novak, and Colin Takeda"
 date: 12-14-2020
@@ -14,7 +8,7 @@ output:
   pdf_document:
     toc: true
 ---
- 
+
 <center> <h1>Formula 1 Racing: <br /> Does the car or the driver have the greater impact?</h1> </center>
 
 ```{r setup, include=FALSE}
@@ -26,6 +20,8 @@ df_timedata <- read_csv("processed_data/std_avg_laptime.csv") %>%
   filter(year >= 2014)
 df_data <- read_csv("processed_data/clean_f1.csv") %>% 
   filter(year >= 2014)
+
+df_data <- df_data %>% mutate(driver_name=str_replace_all(df_data$driver_name,"[^[:graph:]]", " "))
 ```
 
 ## Data Background
@@ -33,7 +29,7 @@ df_data <- read_csv("processed_data/clean_f1.csv") %>%
 #### Context
 The Formula 1 World Championship has been one of the premier forms of auto racing around the world since its inaugural season in 1950. The word "formula" refers to the set of rules to which all participants' cars must conform. A Formula 1 season consists of a series of Grands Prix races which take place worldwide on circuits and closed public roads.
 
-#### Source
+#### Data Source
 The [Formula 1 World Championships](https://www.kaggle.com/rohanrao/formula-1-world-championship-1950-2020) dataset consists of all information on the Formula 1 races, drivers, constructors, qualifying, circuits, lap times, pit stops, and championships for every season from 1950 to 2020.
 
 This dataset was published by Rohan Rao, a Data Scientist who goes by the name [Vopani](https://www.kaggle.com/rohanrao) on Kaggle. (Fun fact: he is also the reigning National Sudoku Champion of India.) He compiled this dataset using the [Ergast Developer API](http://ergast.com/mrd/), an experimental web service that provides a historical record of motor racing data for non-commercial purposes. The API provides data specifically for the Formula One series, from the beginning of the world championships in 1950 up to the present season.
@@ -57,22 +53,22 @@ The data came in many separate files, including `results.csv`, `drivers.csv`, `c
 
 In our dataset we kept these columns: 
 
-- resultId
-- raceId
-- driverId
-- constructorId
-- positionOrder
-- laps
-- fastestLapSpeed
-- statusId
-- driver_name
-- constructor_name
-- year
-- round
-- circuitId
-- race_name
-- status
-- circuit_name
+- `resultId`
+- `raceId`
+- `driverId`
+- `constructorId`
+- `positionOrder`
+- `laps`
+- `fastestLapSpeed`
+- `statusId`
+- `driver_name`
+- `constructor_name`
+- `year`
+- `round`
+- `circuitId`
+- `race_name`
+- `status`
+- `circuit_name`
 
 #### Time data
 
@@ -80,19 +76,14 @@ The column `milliseconds` reports the race completion time for all of the driver
 
 In this time-filtered dataset we added these columns: 
 
-- total_time
-- avg_lap
-- circuit_avg_lap
-- circuit_lap_sd
-- std_avg_lap
+- `total_time` the total time of a race in milliseconds
+- `avg_lap`  the average lap time for a individual race in milliseconds
+- `circuit_avg_lap` the average lap time for a individual circuit in milliseconds
+- `circuit_lap_sd` the standard deviation of the average lap time in milliseconds
+- `std_avg_lap` the standardized average lap time [unitless]
 
-```{r}
+```{r, include=FALSE}
 #df_timedata %>% glimpse()
-df_data
-df_data <- df_data %>% mutate(driver_name=str_replace_all(df_data$driver_name,"[^[:graph:]]", " "))
-  #mutate(driver_name=enc2utf8(df_data$driver_name,"[^[:graph:]]", " "))
- #mutate(driver_name=str_replace_all(df_data$driver_name,"[^[:graph:]]", " "))
-df_data
 ```
 
 #### Changes in racing ruleset/vehicle design through the years
@@ -169,11 +160,11 @@ df_timedata %>%
 
 The graph above shows a visual comparison of standardized average lap time by circuit. The slope of the median is small in magnitude relative to the range of the standardized average lap time, showing that standardizing the average lap time successfully minimizes the effect of circuit. 
 
-#### Modeling by Standard Average Lap Time
+#### Modeling by Standardized Average Lap Time
 
 First, let's model the a subset of the data that has completed times to get a sense of how informative a linear model of **standardized average lap time** is for our dataset, solely based upon driver, constructor, and a combination of the two.
 
-```{r modeling a subset of the data, echo = TRUE}
+```{r modeling a subset of the data, echo = FALSE}
 
 f_driv_sal <-
   df_timedata %>%
@@ -225,6 +216,7 @@ dataFile <- "processed_data/clean_f1.csv"
 df_cleanLapTimes <- read.csv(dataFile)
 ```
 
+
 ```{r fig.width = 20,fig.height=15, echo=FALSE}
 df_cleanLapTimes %>%
   filter(year >= 2014)%>%
@@ -235,7 +227,7 @@ df_cleanLapTimes %>%
   labs(x = "Vehicle Driver Name", y = "Final Position Ranking")
 ```
 
-We can see that when we plot the final position vs the driver of the vehicle there does seem to be a correlation. in that some drivers tend to outperform the average and some drivers tend to underperform the average. If we examine the names the highly performing racers tend to be the racers more well renown for their skill such as [Louis Hamelton]() and [](). This suggests that there is a correlation between the driver performance and the standing in the race and we can see this play out in the relatively linear relation between the two variables. An interesting relation we can see in the data are 'plateaus' in the median values where there are sets of drivers with similar performances. 
+We can see that when we plot the final position vs the driver of the vehicle there does seem to be a correlation. in that some drivers tend to outperform the average and some drivers tend to underperform the average. If we examine the names the highly performing racers tend to be the racers more well renown for their skill such as [Lewis Hamilton](https://en.wikipedia.org/wiki/Lewis_Hamilton) and [Nico Rosberg](https://en.wikipedia.org/wiki/Nico_Rosberg). This suggests that there is a correlation between the driver performance and the standing in the race and we can see this play out in the relatively linear relation between the two variables. An interesting relation we can see in the data are 'plateaus' in the median values where there are sets of drivers with similar performances. 
 
 ```{r echo=FALSE}
 df_cleanLapTimes %>%
@@ -255,8 +247,10 @@ Taken together we can see that the driver and constructor graphs are correlated 
 
 Next, we will model the entire data set 
 
-```{r split data into train & validate, echo = TRUE }
+```{r split data into train & validate, echo = FALSE }
 df_data_with_rows <- tibble::rowid_to_column(df_data, "ID")
+
+set.seed(555)
 
 df_validate_pos <-
   df_data_with_rows %>%
@@ -271,11 +265,11 @@ df_train_pos <-
     by = "ID"
   )
 
-df_train_pos
-df_validate_pos
+#df_train_pos
+#df_validate_pos
 ```
 
-```{r modeling using positionOrder, echo = TRUE}
+```{r modeling using positionOrder, echo = FALSE}
 f_driv_pos <-
   df_train_pos %>%
   lm(
@@ -296,6 +290,36 @@ f_drivcons_pos <-
     data = .,
     formula = positionOrder ~ as.factor(driverId) + as.factor(constructorId)
   )
+```
+
+```{r train fit outputs, echo = FALSE, warning = FALSE}
+cat("Train Fit - Just Driver", "\n")
+cat("  Rsquare", rsquare(f_driv_pos, df_validate_pos), "\n")
+cat("  MSE", mse(f_driv_pos, df_validate_pos), "\n")
+
+cat("Train Fit - Just Constructor", "\n")
+cat("  Rsquare", rsquare(f_cons_pos, df_validate_pos), "\n")
+cat("  MSE", mse(f_cons_pos, df_validate_pos), "\n")
+
+cat("Train Fit - Driver and Constructor", "\n")
+cat("  Rsquare", rsquare(f_drivcons_pos, df_validate_pos), "\n")
+cat("  MSE", mse(f_drivcons_pos, df_validate_pos), "\n")
+```
+
+After multiple samples we see that the R-squared values for just driver and just constructor tend to range from 30% to 37% and a MSE that ranges from 22 to 24. The just driver and just constructor fits seem to be very close in R-squared values and MSE to one another and there is no significant difference between the two. In comparison, driver and constructor has an R-squared value that tends to range from 33% to 41% and a MSE of 20 to 23. The driver and constructor fit tends to always be better than either the just driver or just constructor fit. Overall, the the range of values for the driver and constructor fit is promising given the multitude of outside factors in racing that is not covered by the investigated factors.
+
+#### Prediction Interval
+
+```{r echo=FALSE}
+## Helper function to compute uncertainty bounds
+add_uncertainties <- function(data, model, prefix = "pred", ...) {
+  df_fit <-
+    stats::predict(model, data, ...) %>%
+    as_tibble() %>%
+    rename_with(~ str_c(prefix, "_", .))
+
+  bind_cols(data, df_fit)
+}
 ```
 
 ```{r train fit outputs, echo = FALSE, warning = FALSE}
@@ -434,7 +458,6 @@ In the graph of the driver and constructor model, there is a noticeable gap in p
 
 #### Quantifying uncertainty
 
-
 ```{r warning=FALSE, fig.width=16, fig.height=12, echo=FALSE}
 bind_rows(
   df_validate_pos %>%
@@ -465,43 +488,19 @@ bind_rows(
 
 The graph above shows the predicted final position as well as the prediction interval for each drier-constructor pair in our data. While we are able to compute the prediction intervals on all possible inputs to our model, we have had a hard time finding a way to create an effective visual comparing these prediction intervals to the actual final position. 
 
+If possible given your data, report all estimates with confidence / prediction / tolerance intervals. If not possible, clearly explain why it is not possible to provide intervals and document what sources of uncertainty are not quantified.
+
+## Questions Remaining
+
+- Can you visualize rule changes, such as engine specification, on the overall trend of the data?
+- Can you look at track changes over the years and effects on lap times?
+- How much does starting position have an effect on the final ending position?
+- Using the history of an individual driver's performances can you predict their lap times in future races?
+
 ----------------------------------------
 
 ## Conclusion
 
-
+Our initial driving question sought to answer whether the car or the driver has a greater impact on overall performance. The answer that we came to is that both have a sizable impact on performance, and their individual significance cannot be easily isolated using simple models. Our models demonstrate that using either driver or constructor on its own is a significant predictor for final position order. (which one is a better approximation relies on your sampling received in your train test split). A model using the combination of both variables as a predictor served as the strongest predictor of final position, however it still did not sufficiently account for the final position of the vehicles. If it’s desired to have an accurate predictor of the final position of a Formula 1 race, one should take into account more factors than the two investigated in this project. However, if one wants to know whether the driver or the vehicle is more significant in determining results, the answer is that there is no statistically significant difference between the two factors’ predictive ability to determine race results.
 
 ----------------------------------------
-
-## Rubrics
-
-Questions to answer:
-
-- What question did you set out to answer?
-- What data did you find to help answer that question?
-- What is the relevant background on your question?
-- What level of (quantified) certainty do you have in your results?
-- What conclusions did you come to?
-- What questions do you have remaining?
-- Make sure your report contains at least one presentation-quality figure
-
-Observed:
-
-- (The usual stuff)
-- Must provide background
-- Must posit a question
-
-Supported:
-
-- (The usual stuff)
-- Some analysis must support answering question
-
-Assessed:
-
-- (The usual stuff)
-- All estimates must be provided with some quantification of uncertainty (e.g. confidence / prediction / tolerance intervals), OR a justification for why producing an interval is not possible and documentation for sources of uncertainty not accounted for.
-
-Styled:
-
-- (The usual stuff)
-- Report must contain at least one presentation-quality figure

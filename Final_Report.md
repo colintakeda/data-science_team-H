@@ -1,9 +1,41 @@
+<<<<<<< HEAD
 
 ## \=======
 
 title: "" author: “Lilo Heinrich, Tim Novak, and Colin Takeda” date:
 12-14-2020 output: github\_document: toc: true pdf\_document: toc: true
 —
+=======
+Lilo Heinrich, Tim Novak, and Colin Takeda
+12-14-2020
+
+  - [Data Background](#data-background)
+      - [Context](#context)
+      - [Data Source](#data-source)
+  - [Investigation Question](#investigation-question)
+      - [Does the car or the driver have the greater
+        impact?](#does-the-car-or-the-driver-have-the-greater-impact)
+  - [Data Tidying](#data-tidying)
+      - [Time data](#time-data)
+      - [Changes in racing ruleset/vehicle design through the
+        years](#changes-in-racing-rulesetvehicle-design-through-the-years)
+      - [Potential Problems](#potential-problems)
+  - [Exploratory Data Analysis](#exploratory-data-analysis)
+      - [Standardized Average Lap Time](#standardized-average-lap-time)
+      - [Standardized Average Lap Time by
+        Circuit](#standardized-average-lap-time-by-circuit)
+      - [Modeling by Standardized Average Lap
+        Time](#modeling-by-standardized-average-lap-time)
+  - [Final Position Order](#final-position-order)
+      - [Driver and Constructor by Final Position
+        Order](#driver-and-constructor-by-final-position-order)
+      - [Modelling by Final Position
+        Order](#modelling-by-final-position-order)
+      - [Prediction Interval](#prediction-interval)
+  - [Questions Remaining](#questions-remaining)
+  - [Conclusion](#conclusion)
+  - [Rubrics](#rubrics)
+>>>>>>> fa8a5856221af55687524f38818884e0ae539582
 
 <center>
 
@@ -27,7 +59,11 @@ cars must conform. A Formula 1 season consists of a series of Grands
 Prix races which take place worldwide on circuits and closed public
 roads.
 
+<<<<<<< HEAD
 #### Source
+=======
+#### Data Source
+>>>>>>> fa8a5856221af55687524f38818884e0ae539582
 
 The [Formula 1 World
 Championships](https://www.kaggle.com/rohanrao/formula-1-world-championship-1950-2020)
@@ -75,6 +111,7 @@ missing values with `NA`.
 
 In our dataset we kept these columns:
 
+<<<<<<< HEAD
   - resultId
   - raceId
   - driverId
@@ -91,6 +128,24 @@ In our dataset we kept these columns:
   - race\_name
   - status
   - circuit\_name
+=======
+  - `resultId`
+  - `raceId`
+  - `driverId`
+  - `constructorId`
+  - `positionOrder`
+  - `laps`
+  - `fastestLapSpeed`
+  - `statusId`
+  - `driver_name`
+  - `constructor_name`
+  - `year`
+  - `round`
+  - `circuitId`
+  - `race_name`
+  - `status`
+  - `circuit_name`
+>>>>>>> fa8a5856221af55687524f38818884e0ae539582
 
 #### Time data
 
@@ -107,6 +162,7 @@ removed these observations. Overall, we still only have lap times for
 
 In this time-filtered dataset we added these columns:
 
+<<<<<<< HEAD
   - total\_time
   - avg\_lap
   - circuit\_avg\_lap
@@ -148,6 +204,15 @@ In this time-filtered dataset we added these columns:
     ## # ... with 2,757 more rows, and 9 more variables: statusId <dbl>,
     ## #   driver_name <chr>, constructor_name <chr>, year <dbl>, round <dbl>,
     ## #   circuitId <dbl>, race_name <chr>, status <chr>, circuit_name <chr>
+=======
+  - `total_time` the total time of a race in milliseconds
+  - `avg_lap` the average lap time for a individual race in milliseconds
+  - `circuit_avg_lap` the average lap time for a individual circuit in
+    milliseconds
+  - `circuit_lap_sd` the standard deviation of the average lap time in
+    milliseconds
+  - `std_avg_lap` the standardized average lap time \[unitless\]
+>>>>>>> fa8a5856221af55687524f38818884e0ae539582
 
 #### Changes in racing ruleset/vehicle design through the years
 
@@ -219,13 +284,18 @@ to the range of the standardized average lap time, showing that
 standardizing the average lap time successfully minimizes the effect of
 circuit.
 
+<<<<<<< HEAD
 #### Modeling by Standard Average Lap Time
+=======
+#### Modeling by Standardized Average Lap Time
+>>>>>>> fa8a5856221af55687524f38818884e0ae539582
 
 First, let’s model the a subset of the data that has completed times to
 get a sense of how informative a linear model of **standardized average
 lap time** is for our dataset, solely based upon driver, constructor,
 and a combination of the two.
 
+<<<<<<< HEAD
 ``` r
 f_driv_sal <-
   df_timedata %>%
@@ -249,6 +319,8 @@ f_drivcons_sal <-
   )
 ```
 
+=======
+>>>>>>> fa8a5856221af55687524f38818884e0ae539582
     ## Subset Fit - Just Driver
 
     ##   Rsquare 0.05762464
@@ -303,12 +375,23 @@ We can see that when we plot the final position vs the driver of the
 vehicle there does seem to be a correlation. in that some drivers tend
 to outperform the average and some drivers tend to underperform the
 average. If we examine the names the highly performing racers tend to be
+<<<<<<< HEAD
 the racers more well renown for their skill such as [Louis Hamelton]()
 and [](). This suggests that there is a correlation between the driver
 performance and the standing in the race and we can see this play out in
 the relatively linear relation between the two variables. An interesting
 relation we can see in the data are ‘plateaus’ in the median values
 where there are sets of drivers with similar performances.
+=======
+the racers more well renown for their skill such as [Lewis
+Hamilton](https://en.wikipedia.org/wiki/Lewis_Hamilton) and [Nico
+Rosberg](https://en.wikipedia.org/wiki/Nico_Rosberg). This suggests that
+there is a correlation between the driver performance and the standing
+in the race and we can see this play out in the relatively linear
+relation between the two variables. An interesting relation we can see
+in the data are ‘plateaus’ in the median values where there are sets of
+drivers with similar performances.
+>>>>>>> fa8a5856221af55687524f38818884e0ae539582
 
 ![](Final_Report_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
 
@@ -333,6 +416,7 @@ constructor.
 
 Next, we will model the entire data set
 
+<<<<<<< HEAD
 ``` r
 df_data_with_rows <- tibble::rowid_to_column(df_data, "ID")
 
@@ -443,6 +527,29 @@ resembles the shape of the validation data graph in each case.
 There is a noticeable gap in predictions between fourth and sixth place
 
 #### Quantifying uncertaintly
+=======
+    ## Train Fit - Just Driver
+
+    ##   Rsquare 0.3382017
+
+    ##   MSE 23.5578
+
+    ## Train Fit - Just Constructor
+
+    ##   Rsquare 0.3511541
+
+    ##   MSE 23.09621
+
+    ## Train Fit - Driver and Constructor
+
+    ##   Rsquare 0.3704461
+
+    ##   MSE 22.41127
+
+#### Prediction Interval
+
+![](Final_Report_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
+>>>>>>> fa8a5856221af55687524f38818884e0ae539582
 
 ![](Final_Report_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
 
@@ -451,6 +558,25 @@ prediction / tolerance intervals. If not possible, clearly explain why
 it is not possible to provide intervals and document what sources of
 uncertainty are not quantified.
 
+<<<<<<< HEAD
+=======
+## Questions Remaining
+
+  - Can you visualize rule changes, such as engine specification, on the
+    overall trend of the data?
+
+  - Can you look at track changes over the years and effects on lap
+    times?
+
+  - How much does starting position have an effect on the final ending
+    position?
+
+  - Using the history of an individual driver’s performances can you
+    predict their lap times in future races?
+
+  - 
+
+>>>>>>> fa8a5856221af55687524f38818884e0ae539582
 -----
 
 ## Conclusion
