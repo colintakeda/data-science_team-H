@@ -36,5 +36,25 @@ df_avgLapTimes %>%
   labs(x = "Vehicle Constructor Name",y = "Standardized Average Lap Time (ms)")
 ```
 
+```{r}
+dataFile <- "processed_data/clean_f1.csv"
+df_cleanLapTimes <- read.csv(dataFile)
+```
 
+```{r fig.width = 20,fig.height=10}
+df_cleanLapTimes %>%
+  filter(year > 2014)%>%
+  mutate(driver_name = fct_reorder(as.character(driver_name),positionOrder))%>%
+  ggplot(mapping = aes(x = driver_name, y = positionOrder)) +
+  geom_boxplot() +
+  theme(axis.text.x = element_text(angle = 90,vjust = 0.5, hjust = 1))
+```
+```{r}
+df_cleanLapTimes %>%
+  filter(year > 2014)%>%
+  mutate(constructor_name = fct_reorder(as.character(constructor_name),positionOrder))%>%
+  ggplot(mapping = aes(x = constructor_name, y = positionOrder)) +
+  geom_boxplot() +
+  theme(axis.text.x = element_text(angle = 90,vjust = 0.5, hjust = 1))
+```
 
