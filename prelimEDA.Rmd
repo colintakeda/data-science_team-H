@@ -32,42 +32,28 @@ df_avgLapTimes %>%
   labs(x = "Vehicle Constructor Name",y = "Standardized Average Lap Time (ms)")
 ```
 
-```{r fig.width = 20,fig.height=10}
-df_cleandata %>%
-  mutate(driver_name = fct_reorder(as.character(driver_name),positionOrder))%>%
-  ggplot(mapping = aes(x = driver_name, y = positionOrder)) +
-  geom_boxplot() +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 90,vjust = 0.5, hjust = 1))+
-  labs(x = "Driver Name",y = "Final position ranking")
-
-df_cleandata %>%
-  mutate(constructor_name = fct_reorder(as.character(constructor_name),positionOrder, .fun = mean))%>%
-  ggplot(mapping = aes(x = constructor_name, y = positionOrder)) +
-  geom_boxplot()+
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 90,vjust = 0.5, hjust = 1))+
-  labs(x = "Vehicle Constructor Name",y = "Final position ranking")
+<<<<<<< HEAD
+```{r}
+dataFile <- "processed_data/clean_f1.csv"
+df_cleanLapTimes <- read.csv(dataFile)
 ```
 
 ```{r fig.width = 20,fig.height=10}
-df_cleandata %>%
-  group_by(driver_name) %>%
-  summarise(mean_position = mean(positionOrder)) %>%
-  mutate(driver_name = fct_reorder(as.character(driver_name),mean_position))%>%
-  ggplot(mapping = aes(x = driver_name, y = mean_position)) +
-  geom_point() +
-  theme_minimal() +
+df_cleanLapTimes %>%
+  filter(year > 2014)%>%
+  mutate(driver_name = fct_reorder(as.character(driver_name),positionOrder))%>%
+  ggplot(mapping = aes(x = driver_name, y = positionOrder)) +
+  geom_boxplot() +
   theme(axis.text.x = element_text(angle = 90,vjust = 0.5, hjust = 1))+
-  labs(x = "Driver Name",y = "Final position ranking")
+  labs(x = "Vehicle Driver Name", y = "Final Position Ranking")
+```
 
-df_cleandata %>%
-  group_by(constructor_name) %>%
-  summarise(mean_position = mean(positionOrder)) %>%
-  mutate(constructor_name = fct_reorder(as.character(constructor_name),mean_position))%>%
-  ggplot(mapping = aes(x = constructor_name, y = mean_position)) +
-  geom_point()+
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 90,vjust = 0.5, hjust = 1))+
-  labs(x = "Vehicle Constructor Name",y = "Final position ranking")
+```{r}
+df_cleanLapTimes %>%
+  filter(year > 2014)%>%
+  mutate(constructor_name = fct_reorder(as.character(constructor_name),positionOrder))%>%
+  ggplot(mapping = aes(x = constructor_name, y = positionOrder)) +
+  geom_boxplot() +
+  theme(axis.text.x = element_text(angle = 90,vjust = 0.5, hjust = 1)) +
+  labs(x = "Vehicle Constructor Name",y = "Final Position Ranking")
 ```
