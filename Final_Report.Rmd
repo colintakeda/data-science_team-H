@@ -205,9 +205,42 @@ Looking next at our R-square value we see that our models **does not** encapsula
 
 These models should be taken with a grain or more of salt as we are using the entire subset of data set to create them, so they are extremely optimistic with the fit and do not cover all observations available. Also, as we see from our R-square values, using driver and/or constructor does not seem very fruitful for modeling standardized average lap time. While this was a useful metric for comparing across circuits, it does not seem to be as useful for modeling. Instead, we should explore other variables to indicate performance. 
 
-## Final Position
+## Final Position Order
 
-#### Modelling by Final Position
+#### Driver and Constructor by Final Position Order
+```{r, echo=FALSE}
+dataFile <- "processed_data/clean_f1.csv"
+df_cleanLapTimes <- read.csv(dataFile)
+```
+
+
+```{r fig.width = 20,fig.height=15, echo=FALSE}
+df_cleanLapTimes %>%
+  filter(year >= 2014)%>%
+  mutate(driver_name = fct_reorder(as.character(driver_name),positionOrder))%>%
+  ggplot(mapping = aes(x = driver_name, y = positionOrder)) +
+  geom_boxplot() +
+  theme(axis.text.x = element_text(angle = 90,vjust = 0.5, hjust = 1))+
+  labs(x = "Vehicle Driver Name", y = "Final Position Ranking")
+```
+
+We can see that when we plot the final position vs the driver of the vehicle there does seem to be a correlation. in that some drivers tend to outperform the average and some drivers tend to underperform the average. If we examine the names the highly performing racers tend to be the racers more well renown for their skill such as [Louis Hamelton]() and [](). This suggests that there is a correlation between the driver performance and the standing in the race and we can see this play out in the relatively linear relation between the two variables. An interesting relation we can see in the data are 'plateaus' in the median values where there are sets of drivers with similar performances. 
+
+```{r echo=FALSE}
+df_cleanLapTimes %>%
+  filter(year >= 2014)%>%
+  mutate(constructor_name = fct_reorder(as.character(constructor_name),positionOrder))%>%
+  ggplot(mapping = aes(x = constructor_name, y = positionOrder)) +
+  geom_boxplot() +
+  theme(axis.text.x = element_text(angle = 90,vjust = 0.5, hjust = 1)) +
+  labs(x = "Vehicle Constructor Name",y = "Final Position Ranking")
+```
+
+When we plot the constructor vs the final position order we see generally that the higher performing constructors are associated with a low position order, and the lower performing constructors are associated with a lower position order, however this is not a linear relationship. The highest performing constructors account for most of the low final position orders and the lowest performing constructors account for much of the high final position orders. But middle performing constructors all seem to have similar performance.
+
+Taken together we can see that the driver and constructor graphs are correlated with the final position order so it is likely that both of them help account for the final position order, but they might not be the sole determining factors. The more linear relationship of driver with final position order suggests that the driver is slightly more predictive of the final position order than the less linear vehicle constructor.
+
+#### Modelling by Final Position Order
 
 Next, we will model the entire data set 
 
@@ -304,8 +337,13 @@ df_preds %>%
 
 ```{r}
 df_intervals <-
-  df_train_pos %>%
-  add_uncertainties(f_cons_pos, interval = "prediction", prefix = "pi")
+  df_validate_pos %>%
+  add_uncertainties(f_driv_pos, interval = "prediction", prefix = "pi") %>%
+  mutate(pi_fit_driv = pi_fit, pi_lwr_driv = pi_lwr, pi_upr_driv = pi_upr) %>%
+  add_uncertainties(f_cons_pos, interval = "prediction", prefix = "pi") %>%
+  mutate(pi_fit_cons = pi_fit, pi_lwr_cons = pi_lwr, pi_upr_cons = pi_upr) %>%
+  add_uncertainties(f_drivcons_pos, interval = "prediction", prefix = "pi") %>%
+  mutate(pi_fit_drivcons = pi_fit, pi_lwr_drivcons = pi_lwr, pi_upr_drivcons = pi_upr)
 df_intervals
 
 df_intervals %>%
