@@ -292,7 +292,7 @@ f_drivcons_pos <-
   )
 ```
 
-```{r train fit outputs, echo = FALSE, warning = FALSE}
+```{r, echo = FALSE, warning = FALSE}
 cat("Train Fit - Just Driver", "\n")
 cat("  Rsquare", rsquare(f_driv_pos, df_validate_pos), "\n")
 cat("  MSE", mse(f_driv_pos, df_validate_pos), "\n")
@@ -381,6 +381,7 @@ bind_rows(
   geom_point() +
   xlim(0,25) +
   ylim(0,25) +
+  coord_flip()+
   facet_grid(~ model, labeller = label_both) +
   theme_minimal() +
   labs(
@@ -408,6 +409,7 @@ bind_rows(
   geom_point() +
   xlim(0,25) +
   ylim(0,25) +
+  coord_flip()+
   facet_grid(~ model, labeller = label_both) +
   theme_minimal() +
   labs(
@@ -435,6 +437,7 @@ bind_rows(
   geom_point() +
   xlim(0,25) +
   ylim(0,25) +
+  coord_flip()+
   facet_grid(~ model, labeller = label_both) +
   theme_minimal() +
   labs(

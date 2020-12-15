@@ -1,11 +1,3 @@
-<<<<<<< HEAD
-
-## \=======
-
-title: "" author: “Lilo Heinrich, Tim Novak, and Colin Takeda” date:
-12-14-2020 output: github\_document: toc: true pdf\_document: toc: true
-—
-=======
 Lilo Heinrich, Tim Novak, and Colin Takeda
 12-14-2020
 
@@ -32,10 +24,11 @@ Lilo Heinrich, Tim Novak, and Colin Takeda
       - [Modelling by Final Position
         Order](#modelling-by-final-position-order)
       - [Prediction Interval](#prediction-interval)
+      - [Assessing Final Position Order
+        Models](#assessing-final-position-order-models)
+      - [Quantifying uncertainty](#quantifying-uncertainty)
   - [Questions Remaining](#questions-remaining)
   - [Conclusion](#conclusion)
-  - [Rubrics](#rubrics)
->>>>>>> fa8a5856221af55687524f38818884e0ae539582
 
 <center>
 
@@ -59,11 +52,7 @@ cars must conform. A Formula 1 season consists of a series of Grands
 Prix races which take place worldwide on circuits and closed public
 roads.
 
-<<<<<<< HEAD
-#### Source
-=======
 #### Data Source
->>>>>>> fa8a5856221af55687524f38818884e0ae539582
 
 The [Formula 1 World
 Championships](https://www.kaggle.com/rohanrao/formula-1-world-championship-1950-2020)
@@ -111,24 +100,6 @@ missing values with `NA`.
 
 In our dataset we kept these columns:
 
-<<<<<<< HEAD
-  - resultId
-  - raceId
-  - driverId
-  - constructorId
-  - positionOrder
-  - laps
-  - fastestLapSpeed
-  - statusId
-  - driver\_name
-  - constructor\_name
-  - year
-  - round
-  - circuitId
-  - race\_name
-  - status
-  - circuit\_name
-=======
   - `resultId`
   - `raceId`
   - `driverId`
@@ -145,7 +116,6 @@ In our dataset we kept these columns:
   - `race_name`
   - `status`
   - `circuit_name`
->>>>>>> fa8a5856221af55687524f38818884e0ae539582
 
 #### Time data
 
@@ -162,49 +132,6 @@ removed these observations. Overall, we still only have lap times for
 
 In this time-filtered dataset we added these columns:
 
-<<<<<<< HEAD
-  - total\_time
-  - avg\_lap
-  - circuit\_avg\_lap
-  - circuit\_lap\_sd
-  - std\_avg\_lap
-
-<!-- end list -->
-
-    ## # A tibble: 2,767 x 16
-    ##    resultId raceId driverId constructorId positionOrder  laps fastestLapSpeed
-    ##       <dbl>  <dbl>    <dbl>         <dbl>         <dbl> <dbl>           <dbl>
-    ##  1    22130    900        3           131             1    57            206.
-    ##  2    22131    900      825             1             2    57            205.
-    ##  3    22132    900       18             1             3    57            205.
-    ##  4    22133    900        4             6             4    57            205.
-    ##  5    22134    900      822             3             5    57            206.
-    ##  6    22135    900      807            10             6    57            206.
-    ##  7    22136    900        8             6             7    57            205.
-    ##  8    22137    900      818             5             8    57            204.
-    ##  9    22138    900      826             5             9    57            203.
-    ## 10    22139    900      815            10            10    57            206.
-    ## # ... with 2,757 more rows, and 9 more variables: statusId <dbl>,
-    ## #   driver_name <chr>, constructor_name <chr>, year <dbl>, round <dbl>,
-    ## #   circuitId <dbl>, race_name <chr>, status <chr>, circuit_name <chr>
-
-    ## # A tibble: 2,767 x 16
-    ##    resultId raceId driverId constructorId positionOrder  laps fastestLapSpeed
-    ##       <dbl>  <dbl>    <dbl>         <dbl>         <dbl> <dbl>           <dbl>
-    ##  1    22130    900        3           131             1    57            206.
-    ##  2    22131    900      825             1             2    57            205.
-    ##  3    22132    900       18             1             3    57            205.
-    ##  4    22133    900        4             6             4    57            205.
-    ##  5    22134    900      822             3             5    57            206.
-    ##  6    22135    900      807            10             6    57            206.
-    ##  7    22136    900        8             6             7    57            205.
-    ##  8    22137    900      818             5             8    57            204.
-    ##  9    22138    900      826             5             9    57            203.
-    ## 10    22139    900      815            10            10    57            206.
-    ## # ... with 2,757 more rows, and 9 more variables: statusId <dbl>,
-    ## #   driver_name <chr>, constructor_name <chr>, year <dbl>, round <dbl>,
-    ## #   circuitId <dbl>, race_name <chr>, status <chr>, circuit_name <chr>
-=======
   - `total_time` the total time of a race in milliseconds
   - `avg_lap` the average lap time for a individual race in milliseconds
   - `circuit_avg_lap` the average lap time for a individual circuit in
@@ -212,7 +139,6 @@ In this time-filtered dataset we added these columns:
   - `circuit_lap_sd` the standard deviation of the average lap time in
     milliseconds
   - `std_avg_lap` the standardized average lap time \[unitless\]
->>>>>>> fa8a5856221af55687524f38818884e0ae539582
 
 #### Changes in racing ruleset/vehicle design through the years
 
@@ -284,43 +210,13 @@ to the range of the standardized average lap time, showing that
 standardizing the average lap time successfully minimizes the effect of
 circuit.
 
-<<<<<<< HEAD
-#### Modeling by Standard Average Lap Time
-=======
 #### Modeling by Standardized Average Lap Time
->>>>>>> fa8a5856221af55687524f38818884e0ae539582
 
 First, let’s model the a subset of the data that has completed times to
 get a sense of how informative a linear model of **standardized average
 lap time** is for our dataset, solely based upon driver, constructor,
 and a combination of the two.
 
-<<<<<<< HEAD
-``` r
-f_driv_sal <-
-  df_timedata %>%
-  lm(
-    data = .,
-    formula = std_avg_lap ~ as.factor(driverId)
-  )
-
-f_cons_sal <- 
-  df_timedata %>% 
-  lm(
-    data = .,
-    formula = std_avg_lap ~ as.factor(constructorId)
-  )
-
-f_drivcons_sal <- 
-  df_timedata %>% 
-  lm(
-    data = .,
-    formula = std_avg_lap ~ as.factor(driverId) + as.factor(constructorId)
-  )
-```
-
-=======
->>>>>>> fa8a5856221af55687524f38818884e0ae539582
     ## Subset Fit - Just Driver
 
     ##   Rsquare 0.05762464
@@ -375,14 +271,6 @@ We can see that when we plot the final position vs the driver of the
 vehicle there does seem to be a correlation. in that some drivers tend
 to outperform the average and some drivers tend to underperform the
 average. If we examine the names the highly performing racers tend to be
-<<<<<<< HEAD
-the racers more well renown for their skill such as [Louis Hamelton]()
-and [](). This suggests that there is a correlation between the driver
-performance and the standing in the race and we can see this play out in
-the relatively linear relation between the two variables. An interesting
-relation we can see in the data are ‘plateaus’ in the median values
-where there are sets of drivers with similar performances.
-=======
 the racers more well renown for their skill such as [Lewis
 Hamilton](https://en.wikipedia.org/wiki/Lewis_Hamilton) and [Nico
 Rosberg](https://en.wikipedia.org/wiki/Nico_Rosberg). This suggests that
@@ -391,7 +279,6 @@ in the race and we can see this play out in the relatively linear
 relation between the two variables. An interesting relation we can see
 in the data are ‘plateaus’ in the median values where there are sets of
 drivers with similar performances.
->>>>>>> fa8a5856221af55687524f38818884e0ae539582
 
 ![](Final_Report_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
 
@@ -416,206 +303,111 @@ constructor.
 
 Next, we will model the entire data set
 
-<<<<<<< HEAD
-``` r
-df_data_with_rows <- tibble::rowid_to_column(df_data, "ID")
-
-df_validate_pos <-
-  df_data_with_rows %>%
-  group_by(driverId, constructorId) %>% 
-  slice_sample(prop = 0.5) %>% 
-  ungroup()
-
-df_train_pos <-
-  anti_join(
-    df_data_with_rows,
-    df_validate_pos,
-    by = "ID"
-  )
-
-df_train_pos
-```
-
-    ## # A tibble: 1,405 x 17
-    ##       ID resultId raceId driverId constructorId positionOrder  laps
-    ##    <int>    <dbl>  <dbl>    <dbl>         <dbl>         <dbl> <dbl>
-    ##  1     1    22130    900        3           131             1    57
-    ##  2     2    22131    900      825             1             2    57
-    ##  3     6    22135    900      807            10             6    57
-    ##  4     7    22136    900        8             6             7    57
-    ##  5     9    22138    900      826             5             9    57
-    ##  6    10    22139    900      815            10            10    57
-    ##  7    11    22140    900       16            15            11    56
-    ##  8    13    22142    900      820           206            13    55
-    ##  9    14    22143    900      824           206            14    49
-    ## 10    16    22145    900      813           208            16    29
-    ## # ... with 1,395 more rows, and 10 more variables: fastestLapSpeed <dbl>,
-    ## #   statusId <dbl>, driver_name <chr>, constructor_name <chr>, year <dbl>,
-    ## #   round <dbl>, circuitId <dbl>, race_name <chr>, status <chr>,
-    ## #   circuit_name <chr>
-
-``` r
-df_validate_pos
-```
-
-    ## # A tibble: 1,362 x 17
-    ##       ID resultId raceId driverId constructorId positionOrder  laps
-    ##    <int>    <dbl>  <dbl>    <dbl>         <dbl>         <dbl> <dbl>
-    ##  1  2148    24283   1014        1           131             1    66
-    ##  2   767    22898    945        1           131             2    55
-    ##  3  1948    24083   1004        1           131             1    53
-    ##  4   944    23075    955        1           131             5    51
-    ##  5  2588    24726   1036        1           131             1    66
-    ##  6  2351    24489   1024        1           131             4    61
-    ##  7  2708    24846   1042        1           131             1    66
-    ##  8  2011    24146   1007        1           131             4    71
-    ##  9  1629    23763    988        1           131             2    55
-    ## 10  1889    24024   1001        1           131             2    44
-    ## # ... with 1,352 more rows, and 10 more variables: fastestLapSpeed <dbl>,
-    ## #   statusId <dbl>, driver_name <chr>, constructor_name <chr>, year <dbl>,
-    ## #   round <dbl>, circuitId <dbl>, race_name <chr>, status <chr>,
-    ## #   circuit_name <chr>
-
-``` r
-f_driv_pos <-
-  df_train_pos %>%
-  lm(
-    data = .,
-    formula = positionOrder ~ as.factor(driverId)
-  )
-
-f_cons_pos <- 
-  df_train_pos %>% 
-  lm(
-    data = .,
-    formula = positionOrder ~ as.factor(constructorId)
-  )
-
-f_drivcons_pos <- 
-  df_train_pos %>% 
-  lm(
-    data = .,
-    formula = positionOrder ~ as.factor(driverId) + as.factor(constructorId)
-  )
-```
-
     ## Train Fit - Just Driver
 
-    ##   Rsquare 0.3410123
+    ##   Rsquare 0.3464126
 
-    ##   MSE 24.05458
+    ##   MSE 23.39755
 
     ## Train Fit - Just Constructor
 
-    ##   Rsquare 0.3442954
+    ##   Rsquare 0.3488549
 
-    ##   MSE 23.93227
-
-    ## Train Fit - Driver and Constructor
-
-    ##   Rsquare 0.3705173
-
-    ##   MSE 22.98629
-
-#### Assessing our Models
-
-![](Final_Report_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->![](Final_Report_files/figure-gfm/unnamed-chunk-7-2.png)<!-- -->![](Final_Report_files/figure-gfm/unnamed-chunk-7-3.png)<!-- -->
-Above is a visualization of the actual vs. predicted final position of
-our linear models. The shape of the training data graph closely
-resembles the shape of the validation data graph in each case.
-
-There is a noticeable gap in predictions between fourth and sixth place
-
-#### Quantifying uncertaintly
-=======
-    ## Train Fit - Just Driver
-
-    ##   Rsquare 0.3382017
-
-    ##   MSE 23.5578
-
-    ## Train Fit - Just Constructor
-
-    ##   Rsquare 0.3511541
-
-    ##   MSE 23.09621
+    ##   MSE 23.30775
 
     ## Train Fit - Driver and Constructor
 
-    ##   Rsquare 0.3704461
+    ##   Rsquare 0.3817959
 
-    ##   MSE 22.41127
+    ##   MSE 22.13336
+
+After multiple samples we see that the R-squared values for just driver
+and just constructor tend to range from 30% to 37% and a MSE that ranges
+from 22 to 24. The just driver and just constructor fits seem to be very
+close in R-squared values and MSE to one another and there is no
+significant difference between the two. In comparison, driver and
+constructor has an R-squared value that tends to range from 33% to 41%
+and a MSE of 20 to 23. The driver and constructor fit tends to always be
+better than either the just driver or just constructor fit. Overall, the
+the range of values for the driver and constructor fit is promising
+given the multitude of outside factors in racing that is not covered by
+the investigated factors.
 
 #### Prediction Interval
 
-![](Final_Report_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
->>>>>>> fa8a5856221af55687524f38818884e0ae539582
+    ## Train Fit - Just Driver
 
-![](Final_Report_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+    ##   Rsquare 0.3464126
 
-If possible given your data, report all estimates with confidence /
-prediction / tolerance intervals. If not possible, clearly explain why
-it is not possible to provide intervals and document what sources of
-uncertainty are not quantified.
+    ##   MSE 23.39755
 
-<<<<<<< HEAD
-=======
+    ## Train Fit - Just Constructor
+
+    ##   Rsquare 0.3488549
+
+    ##   MSE 23.30775
+
+    ## Train Fit - Driver and Constructor
+
+    ##   Rsquare 0.3817959
+
+    ##   MSE 22.13336
+
+#### Assessing Final Position Order Models
+
+![](Final_Report_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->![](Final_Report_files/figure-gfm/unnamed-chunk-9-2.png)<!-- -->![](Final_Report_files/figure-gfm/unnamed-chunk-9-3.png)<!-- -->
+Above is a visualization of the actual vs. predicted final position of
+our linear models. The shape of the training data graph closely
+resembles the shape of the validation data graph in all 3 cases.
+
+For the model with the input of only constructor, there are horizontal
+stratifications showing up at different predicted final positions. This
+is because there are only 17 constructors, …
+
+In the graph of the driver and constructor model, there is a noticeable
+gap in predictions between fourth and sixth place …
+
+#### Quantifying uncertainty
+
+![](Final_Report_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
+
+The graph above shows the predicted final position as well as the
+prediction interval for each driver-constructor pair in our data. While
+we are able to compute the prediction intervals on all possible inputs
+to our model, we have had a hard time finding a way to create an
+effective visual comparing these prediction intervals to the actual
+final position.
+
 ## Questions Remaining
 
   - Can you visualize rule changes, such as engine specification, on the
     overall trend of the data?
-
   - Can you look at track changes over the years and effects on lap
     times?
-
   - How much does starting position have an effect on the final ending
     position?
-
   - Using the history of an individual driver’s performances can you
     predict their lap times in future races?
 
-  - 
-
->>>>>>> fa8a5856221af55687524f38818884e0ae539582
 -----
 
 ## Conclusion
 
+Our initial driving question sought to answer whether the car or the
+driver has a greater impact on overall performance. The answer that we
+came to is that both have a sizable impact on performance, and their
+individual significance cannot be easily isolated using simple models.
+Our models demonstrate that using either driver or constructor on its
+own is a significant predictor for final position order. (which one is a
+better approximation relies on your sampling received in your train test
+split). A model using the combination of both variables as a predictor
+served as the strongest predictor of final position, however it still
+did not sufficiently account for the final position of the vehicles. If
+it’s desired to have an accurate predictor of the final position of a
+Formula 1 race, one should take into account more factors than the two
+investigated in this project. However, if one wants to know whether the
+driver or the vehicle is more significant in determining results, the
+answer is that there is no statistically significant difference between
+the two factors’ predictive ability to determine race results.
+
 -----
-
-## Rubrics
-
-Questions to answer:
-
-  - What question did you set out to answer?
-  - What data did you find to help answer that question?
-  - What is the relevant background on your question?
-  - What level of (quantified) certainty do you have in your results?
-  - What conclusions did you come to?
-  - What questions do you have remaining?
-  - Make sure your report contains at least one presentation-quality
-    figure
-
-Observed:
-
-  - (The usual stuff)
-  - Must provide background
-  - Must posit a question
-
-Supported:
-
-  - (The usual stuff)
-  - Some analysis must support answering question
-
-Assessed:
-
-  - (The usual stuff)
-  - All estimates must be provided with some quantification of
-    uncertainty (e.g. confidence / prediction / tolerance intervals), OR
-    a justification for why producing an interval is not possible and
-    documentation for sources of uncertainty not accounted for.
-
-Styled:
-
-  - (The usual stuff)
-  - Report must contain at least one presentation-quality figure
