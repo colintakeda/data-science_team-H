@@ -1,10 +1,12 @@
 ---
 title: ""
+author: "Lilo Heinrich, Tim Novak, and Colin Takeda"
+date: 12-14-2020
 output:
   github_document:
-    toc: yes
+    toc: true
   pdf_document:
-    toc: yes
+    toc: true
 ---
  
 <center> <h1>Formula 1 Racing: <br /> Does the car or the driver have the greater impact?</h1> </center>
@@ -87,9 +89,10 @@ In this time-filtered dataset we added these columns:
 #### Potential Problems
 
 - Some examples of [constructor name changes](https://www.reddit.com/r/formula1/comments/1dos3r/i_made_a_diagram_to_show_how_current_f1_teams/)
-- Rules Era can change performance
+- Rules change year to year and can significantly affect performance
 - New drivers are skewed because they don't have as many data points yet
 - This data is for 70 years of races and [formula racing has changed a lot](https://youtu.be/hgLQWIAaCmY)
+
   - Consider filtering on year >= 2000
 
 ----------------------------------------
@@ -158,7 +161,7 @@ The graph above shows a visual comparison of standardized average lap time by ci
 
 #### Driver and Constructor by Standardized Average Lap Time
 
-```{r fig.width = 20,fig.height=10, echo=FALSE}
+```{r fig.width = 20,fig.height=10, echo=FALSE,  warning = FALSE}
 #df_timedata %>%
 #  mutate(driver_name = fct_reorder(as.character(driver_name),std_avg_lap))%>%
 #  ggplot(mapping = aes(x = driver_name, y = std_avg_lap)) +
@@ -180,43 +183,110 @@ df_timedata %>%
 
 Constructor and standardized average lap time appear to have a positive and fairly linear relationship. This makes sense because standardizing should correct the distribution to become more linear. Seeing that constructor has an impact on standard average lap time is a good sign because it indicates that there may be some causality and therefore also predictive capability.
 
-#### Modelling by standard average lap time
+#### Modeling by standard average lap time
 
-```{r modeling the entire data set}
-fullfit_driver <-
+First, let's model the ***entire data set*** to get a sense of how informative a linear model is for our dataset, solely based upon driver, constructor, and a combination of the two.
+
+```{r modeling the entire data set with train & validate, echo = TRUE, collapse = FALSE}
+f_driv_sal <-
   df_timedata %>%
   lm(
     data = .,
     formula = std_avg_lap ~ as.factor(driverId)
   )
-print("Full Fit - Just Driver")
-cat("Rsquare", rsquare(fullfit_driver, df_timedata), "\n")
-cat("MSE", mse(fullfit_driver, df_timedata), "\n")
-fullfit_constructor <- 
+
+f_cons_sal <- 
   df_timedata %>% 
   lm(
     data = .,
     formula = std_avg_lap ~ as.factor(constructorId)
   )
-print("Full Fit - Just Constructor")
-cat("Rsquare", rsquare(fullfit_constructor, df_timedata), "\n")
-cat("MSE", mse(fullfit_constructor, df_timedata), "\n")
-fullfit_driver_constructor <- 
+
+f_drivcons_sal <- 
   df_timedata %>% 
   lm(
     data = .,
     formula = std_avg_lap ~ as.factor(driverId) + as.factor(constructorId)
   )
-print("Full Fit - Driver and Constructor")
-cat("Rsquare", rsquare(fullfit_driver_constructor, df_timedata), "\n")
-cat("MSE", mse(fullfit_driver_constructor, df_timedata), "\n")
 ```
 
-Looking at our mean square error first we can compare our different models against one another. Between models, the error is lowest with both `driver and constructor` which is a good sign that both are informative towards lap time. The order of best model to worst, solely based upon MSE, is driver and constructor, just driver, and finally just constructor. These results may imply that driver is a better predictor of outcome than constructor, but this is not necessarily the case.
+```{r full fit output, echo = FALSE}
+cat("Full Fit - Just Driver", "\n")
+cat("  Rsquare", rsquare(f_driv_sal, df_timedata), "\n")
+cat("  MSE", mse(f_driv_sal, df_timedata), "\n")
+
+cat("Full Fit - Just Constructor", "\n")
+cat("  Rsquare", rsquare(f_cons_sal, df_timedata), "\n")
+cat("  MSE", mse(f_cons_sal, df_timedata), "\n")
+
+cat("Full Fit - Driver and Constructor", "\n")
+cat("  Rsquare", rsquare(f_drivcons_sal, df_timedata), "\n")
+cat("  MSE", mse(f_drivcons_sal, df_timedata), "\n")
+```
+
+Starting with looking at the mean square error (MSE) we can compare the different fits against one another. Between fits, the error is lowest with both `driver and constructor`. The "goodness of fit" is best with both factors involved, which may imply that both are informative towards standard average lap time. However, the difference is quite small between MSEs, so the predictive capabilities of both at all still seem minute. The order of best fit to worst, solely based upon MSE, is driver and constructor, just driver, and finally just constructor. These results may imply that driver is a better predictor of outcome than constructor, but this is not necessarily the case. 
 
 Looking next at our rsquared value we see that our models do **not** have very good coverage of the data. We are looking at each model only covering around `4.6% to 8.1%` of the data, which calls into question the validity the comparisons made for our MSE. The order of best model to worst, solely based upon rsquare, is driver and constructor, just driver, and finally just constructor, so the overall standings seem to follow the exact same trend seen in both MSE and rsquare.
 
 These models should be taken with a grain or more of salt as we are using the entire data set to create them, so we don't have a separate training and validation data set. However, using a split of the dataset for training and the rest for validation will not increase the accuracy of the model. With such a low predictive capability already it doesn't appear to be useful to fit additional models.
+
+#### Modeling Using Final Position Order
+
+```{r split data into train & validate, echo = TRUE }
+df_data_with_rows <- tibble::rowid_to_column(df_data, "ID")
+
+df_train_pos <-
+  df_data_with_rows %>%
+  group_by(driverId, constructorId, circuitId) %>% 
+  slice_sample(n = 1) %>% 
+  ungroup()
+
+df_validate_pos <-
+  anti_join(
+    df_data_with_rows,
+    df_train_pos,
+    by = "ID"
+  )
+```
+
+```{r modeling using positionOrder, echo = TRUE}
+f_driv_pos <-
+  df_train_pos %>%
+  lm(
+    data = .,
+    formula = positionOrder ~ as.factor(driverId)
+  )
+
+f_cons_pos <- 
+  df_train_pos %>% 
+  lm(
+    data = .,
+    formula = positionOrder ~ as.factor(constructorId)
+  )
+
+f_drivcons_pos <- 
+  df_train_pos %>% 
+  lm(
+    data = .,
+    formula = positionOrder ~ as.factor(driverId) + as.factor(constructorId)
+  )
+```
+
+```{r train fit outputs, echo = FALSE, warning = FALSE}
+cat("Train Fit - Just Driver", "\n")
+cat("  Rsquare", rsquare(f_driv_pos, df_validate_pos), "\n")
+cat("  MSE", mse(f_driv_pos, df_validate_pos), "\n")
+
+cat("Train Fit - Just Constructor", "\n")
+cat("  Rsquare", rsquare(f_cons_pos, df_validate_pos), "\n")
+cat("  MSE", mse(f_cons_pos, df_validate_pos), "\n")
+
+cat("Train Fit - Driver and Constructor", "\n")
+cat("  Rsquare", rsquare(f_drivcons_pos, df_validate_pos), "\n")
+cat("  MSE", mse(f_drivcons_pos, df_validate_pos), "\n")
+```
+
+
 
 ## Final Position
 
