@@ -449,12 +449,11 @@ df_intervals_cons <-
 #df_intervals_cons
 
 ```
-Above is a visualization of the actual vs. predicted final position of our linear models. The shape of the training data graph closely resembles the shape of the validation data graph in all 3 cases. 
+Above is a visualization of the actual vs. predicted final position of our linear models. The shape of the training data graph closely resembles the shape of the validation data graph in all three models. Additionally, there is only a weak linear correlation between actual final position and predicted final position.
 
-For the model with the input of only constructor, there are horizontal stratifications showing up at different predicted final positions. This is because there are only 17 constructors, ...
+For the model with the input of only constructor, there are horizontal stratifications at each in the predicted final positions. This is because the range of final positions that each constructor has achieved can be greater than one, yet the linear model can only assign a single coefficient to each constructor. This poor fit is an inherent limitation of reducing constructor to a linear variable. 
 
-In the graph of the driver and constructor model, there is a noticeable gap in predictions between fourth and sixth place ...
-
+In the graph of the driver and constructor model, there is a noticeable gap in predictions between fourth and sixth place. 
 
 #### Quantifying uncertainty
 
