@@ -158,11 +158,11 @@ df_timedata %>%
 
 The graph above shows a visual comparison of standardized average lap time by circuit. The slope of the median is small in magnitude relative to the range of the standardized average lap time, showing that standardizing the average lap time successfully minimizes the effect of circuit. 
 
-#### Modeling by Standard Average Lap Time
+#### Modeling by Standardized Average Lap Time
 
-First, let's model the a subset of the data that has completed times to get a sense of how informative a linear model of **standarderized average lap time** is for our dataset, solely based upon driver, constructor, and a combination of the two.
+First, let's model the a subset of the data that has completed times to get a sense of how informative a linear model of **standardized average lap time** is for our dataset, solely based upon driver, constructor, and a combination of the two.
 
-```{r modeling a subset of the data, echo = TRUE}
+```{r modeling a subset of the data, echo = FALSE}
 
 f_driv_sal <-
   df_timedata %>%
@@ -265,7 +265,7 @@ df_train_pos
 df_validate_pos
 ```
 
-```{r modeling using positionOrder, echo = TRUE}
+```{r modeling using positionOrder, echo = FALSE}
 f_driv_pos <-
   df_train_pos %>%
   lm(
@@ -363,6 +363,13 @@ df_intervals %>%
 
 If possible given your data, report all estimates with confidence / prediction / tolerance intervals. If not possible, clearly explain why it is not possible to provide intervals and document what sources of uncertainty are not quantified.
 
+## Questions Remaining
+
+- Can you visualize rule changes, such as engine specification, on the overall trend of the data?
+- Can you look at track changes over the years and effects on lap times?
+- How much does starting position have an effect on the final ending position?
+- Using the history of an individual driver's performances can you predict their lap times in future races?
+- 
 
 ----------------------------------------
 
@@ -371,6 +378,8 @@ If possible given your data, report all estimates with confidence / prediction /
 
 
 ----------------------------------------
+
+
 
 ## Rubrics
 
