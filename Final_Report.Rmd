@@ -16,8 +16,10 @@ knitr::opts_chunk$set(echo = FALSE)
 library(tidyverse)
 library(modelr)
 
-df_timedata <- read_csv("processed_data/std_avg_laptime.csv") %>% filter(year >= 2014)
-df_data <- read_csv("processed_data/clean_f1.csv") %>% filter(year >= 2014)
+df_timedata <- read_csv("processed_data/std_avg_laptime.csv") %>% 
+  filter(year >= 2014)
+df_data <- read_csv("processed_data/clean_f1.csv") %>% 
+  filter(year >= 2014)
 ```
 
 ## Data Background
@@ -65,10 +67,6 @@ In our dataset we kept these columns:
 - race_name
 - status
 - circuit_name
-
-```{r, include=FALSE}
-#df_data %>% glimpse()
-```
 
 #### Time data
 
@@ -159,11 +157,12 @@ df_timedata %>%
 
 The graph above shows a visual comparison of standardized average lap time by circuit. The slope of the median is small in magnitude relative to the range of the standardized average lap time, showing that standardizing the average lap time successfully minimizes the effect of circuit. 
 
-#### Modeling by standard average lap time
+#### Modeling by Standard Average Lap Time
 
-First, let's model the ***entire data set*** to get a sense of how informative a linear model is for our dataset, solely based upon driver, constructor, and a combination of the two.
+First, let's model the a subset of the data that has completed times to get a sense of how informative a linear model of `standarderized average lap time` is for our dataset, solely based upon driver, constructor, and a combination of the two.
 
-```{r modeling the entire data set with train & validate, echo = TRUE, collapse = FALSE}
+```{r modeling a subset of the data, echo = TRUE}
+
 f_driv_sal <-
   df_timedata %>%
   lm(
@@ -186,29 +185,31 @@ f_drivcons_sal <-
   )
 ```
 
-```{r full fit output, echo = FALSE}
-cat("Full Fit - Just Driver", "\n")
+```{r subset fit output, echo = FALSE, warning = FALSE}
+cat("Subset Fit - Just Driver", "\n")
 cat("  Rsquare", rsquare(f_driv_sal, df_timedata), "\n")
 cat("  MSE", mse(f_driv_sal, df_timedata), "\n")
 
-cat("Full Fit - Just Constructor", "\n")
+cat("Subset Fit - Just Constructor", "\n")
 cat("  Rsquare", rsquare(f_cons_sal, df_timedata), "\n")
 cat("  MSE", mse(f_cons_sal, df_timedata), "\n")
 
-cat("Full Fit - Driver and Constructor", "\n")
+cat("Subset Fit - Driver and Constructor", "\n")
 cat("  Rsquare", rsquare(f_drivcons_sal, df_timedata), "\n")
 cat("  MSE", mse(f_drivcons_sal, df_timedata), "\n")
 ```
 
-Starting with looking at the mean square error (MSE) we can compare the different fits against one another. Between fits, the error is lowest with both `driver and constructor`. The "goodness of fit" is best with both factors involved, which may imply that both are informative towards standard average lap time. However, the difference is quite small between MSEs, so the predictive capabilities of both at all still seem minute. The order of best fit to worst, solely based upon MSE, is driver and constructor, just driver, and finally just constructor. These results may imply that driver is a better predictor of outcome than constructor, but this is not necessarily the case. 
+Starting with looking at the mean square error (MSE) we can compare the different fits against one another. Between fits, the error is lowest with both `driver and constructor`. The "goodness of fit" is best with both factors involved, which may imply that both are informative towards standard average lap time. However, the difference is quite small between MSEs, so the predictive capabilities of both still seem minute. The order of best to worst fit, solely based upon MSE, is **driver and constructor, just driver, and just constructor.** These results may imply that driver is a better predictor of outcome than constructor, but this is not necessarily the case. 
 
-Looking next at our rsquared value we see that our models do **not** have very good coverage of the data. We are looking at each model only covering around `4.6% to 8.1%` of the data, which calls into question the validity the comparisons made for our MSE. The order of best model to worst, solely based upon rsquare, is driver and constructor, just driver, and finally just constructor, so the overall standings seem to follow the exact same trend seen in both MSE and rsquare.
+Looking next at our R-square value we see that our models **does not** encapsulate much of the variance of the data. We see the fraction of the variance of the data ranges from 4.8% to 8.9%. The order of best to worst fit, solely based upon R-square, is **driver and constructor, just driver, and finally just constructor.** 
 
-These models should be taken with a grain or more of salt as we are using the entire data set to create them, so we don't have a separate training and validation data set. However, using a split of the dataset for training and the rest for validation will not increase the accuracy of the model. With such a low predictive capability already it doesn't appear to be useful to fit additional models.
+These models should be taken with a grain or more of salt as we are using the entire subset of data set to create them, so they are extremely optimistic with the fit and do not cover all observations available. Also, as we see from our R-square values, using driver and/or constructor does not seem very fruitful for modeling standardized average lap time. While this was a useful metric for comparing across circuits, it does not seem to be as useful for modeling. Instead, we should explore other variables to indicate performance. 
 
-## Final Position Order
+## Final Position
 
-#### Modeling Using Final Position Order
+#### Modelling by Final Position
+
+Next, we will model the entire data set 
 
 ```{r split data into train & validate, echo = TRUE }
 df_data_with_rows <- tibble::rowid_to_column(df_data, "ID")
@@ -267,10 +268,6 @@ cat("  Rsquare", rsquare(f_drivcons_pos, df_validate_pos), "\n")
 cat("  MSE", mse(f_drivcons_pos, df_validate_pos), "\n")
 ```
 
-## Final Position
-
-#### Modelling by Final Position
-
 #### Prediction Interval
 
 ```{r}
@@ -286,33 +283,30 @@ add_uncertainties <- function(data, model, prefix = "pred", ...) {
 ```
 
 ```{r}
-df_pred_driv <-
+df_preds <-
   df_validate_pos %>%
-  add_predictions(f_driv_pos)
-#df_pred_driv
+  add_predictions(f_driv_pos) %>%
+  mutate(pred_driv = pred) %>%
+  add_predictions(f_cons_pos) %>%
+  mutate(pred_cons = pred) %>%
+  add_predictions(f_drivcons_pos) %>%
+  mutate(pred_drivcons = pred)
+df_preds
 
-df_pred_cons <-
-  df_validate_pos %>%
-  add_predictions(f_cons_pos)
-#df_pred_cons
-
-df_pred_drivcons <-
-  df_validate_pos %>%
-  add_predictions(f_drivcons_pos)
-#df_pred_drivcons
-
-df_pred_drivcons %>%
+df_preds %>%
   ggplot() + 
-  geom_point(aes(x=positionOrder, y=pred)) +
-  geom_point(data = df_pred_driv, aes(x=positionOrder, y=pred, color = 'r')) +
-  geom_point(data = df_pred_cons, aes(x=positionOrder, y=pred, color = 'b')) +
+  geom_point(aes(x=positionOrder, y=pred_driv)) +
+  geom_point(aes(x=positionOrder, y=pred_cons, color = 'r')) +
+  geom_point(aes(x=positionOrder, y=pred_drivcons, color = 'b')) +
   geom_abline(intercept = 0, slope=1) +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+```
 
-
+```{r}
 df_intervals <-
   df_train_pos %>%
   add_uncertainties(f_cons_pos, interval = "prediction", prefix = "pi")
+df_intervals
 
 df_intervals %>%
   mutate(constructor_name = fct_reorder(constructor_name, positionOrder)) %>%
@@ -339,7 +333,7 @@ If possible given your data, report all estimates with confidence / prediction /
 
 ## Conclusion
 
-
+testing testing testing
 
 ----------------------------------------
 
@@ -376,3 +370,4 @@ Styled:
 - (The usual stuff)
 - Report must contain at least one presentation-quality figure
 
+>>>>>>> 0186163de513b72013cb76d44c3cda1f8b393891
