@@ -52,22 +52,22 @@ The data came in many separate files, including `results.csv`, `drivers.csv`, `c
 
 In our dataset we kept these columns: 
 
-- resultId
-- raceId
-- driverId
-- constructorId
-- positionOrder
-- laps
-- fastestLapSpeed
-- statusId
-- driver_name
-- constructor_name
-- year
-- round
-- circuitId
-- race_name
-- status
-- circuit_name
+- `resultId`
+- `raceId`
+- `driverId`
+- `constructorId`
+- `positionOrder`
+- `laps`
+- `fastestLapSpeed`
+- `statusId`
+- `driver_name`
+- `constructor_name`
+- `year`
+- `round`
+- `circuitId`
+- `race_name`
+- `status`
+- `circuit_name`
 
 #### Time data
 
@@ -75,11 +75,11 @@ The column `milliseconds` reports the race completion time for all of the driver
 
 In this time-filtered dataset we added these columns: 
 
-- total_time
-- avg_lap
-- circuit_avg_lap
-- circuit_lap_sd
-- std_avg_lap
+- `total_time` the total time of a race in milliseconds
+- `avg_lap`  the average lap time for a individual race in milliseconds
+- `circuit_avg_lap` the average lap time for a individual circuit in milliseconds
+- `circuit_lap_sd` the standard deviation of the average lap time in milliseconds
+- `std_avg_lap` the standardized average lap time [unitless]
 
 ```{r, include=FALSE}
 #df_timedata %>% glimpse()
