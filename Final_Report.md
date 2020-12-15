@@ -189,12 +189,12 @@ Thus we filtered our data to only examine the data from 2014 onwards.
     ##                <dbl>
     ## 1               80.4
 
-As shown in the graph above, final position is heavily reliant on how
-many laps the driver was able to complete. And almost a fifth of the
-time, collisions or car troubles put drivers out of commission before
-the race is finished. These final standings are not reflective of how
-well the driver was doing before that point, so we decided to use
-average lap time to create a more comprehensive performance metric.
+Final position is heavily reliant on how many laps the driver was able
+to complete, and almost a fifth of the time collisions or car troubles
+put drivers out of commission before the race is finished. Final
+position is not reflective of how well the driver was performing before
+an incident happens, so we decided to use average lap time to create a
+new metric.
 
 Average lap time is a comprehensive measure of how well a driver
 performed in a race because it is informed only on the laps they were
@@ -349,11 +349,9 @@ significant difference between the two.
 In comparison, driver and constructor has an R-squared value that tends
 to range from 33% to 41% and a MSE of 20 to 23. The driver and
 constructor fit tends to always be better than either the just driver or
-just constructor fit.
-
-Overall, the the range of values for the driver and constructor fit is
-promising given the multitude of outside factors in racing that are not
-covered by the investigated factors.
+just constructor fit. Overall, the the range of values for the driver
+and constructor fit is promising given the multitude of outside factors
+in racing that are not covered by the investigated factors.
 
 #### Predicted vs Actual Final Position Order
 
@@ -403,12 +401,12 @@ datapoints falling inside the prediction interval.
 However, there is a group of high outliers occurring above several of
 the driver-constructor pairs with the lowest predicted positions. The
 prediction intervals with a lower bound below 0 have much less coverage
-of the actual position data, making up most of the outliers seen. It
-makes sense that if the predicted value is low, the lower prediction
-bound will shift into the negative numbers. However, achieving a
-negative position in the race is not possible. Prediction intervals are
-intended for normally distributed data so the asymmetrical distribution
-of these driver-constructor pairs renders them less effective.
+of the actual position data, making up most of the outliers seen. If the
+predicted value is low, the lower prediction bound will shift into the
+negative numbers, but achieving a negative position in the race is not
+possible. Prediction intervals are intended for normally distributed
+data so the asymmetrical distribution of these driver-constructor pairs
+renders them less effective.
 
 The average size of these prediction intervals is approximately 15
 positions which is large considering that there are less than 30
@@ -443,9 +441,10 @@ own is a significant predictor for final position order. (Which one is a
 better approximation relies on the sampling made in the train-test
 split). A model using the combination of both variables as a predictor
 served as the strongest predictor of final position, however it still
-did not sufficiently account for the final position of the vehicles. If
-it’s desired to have an accurate predictor of the final position of a
-Formula 1 race, one should take into account more factors than the two
+did not sufficiently account for the final position of the vehicles.
+
+If it is desired to have an accurate predictor of the final position of
+a Formula 1 race, one should take into account more factors than the two
 investigated in this project. However, if one wants to know whether the
 driver or the vehicle is more significant in determining results, the
 answer is that there is no statistically significant difference between

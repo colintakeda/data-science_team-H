@@ -3,8 +3,8 @@ Data Processing Document
 
   - [Tidy data and join additional
     information](#tidy-data-and-join-additional-information)
-  - [Filter on drivers that drove for multiple constructors (not in
-    use)](#filter-on-drivers-that-drove-for-multiple-constructors-not-in-use)
+  - [Filter on drivers that drove for multiple constructors (not
+    used)](#filter-on-drivers-that-drove-for-multiple-constructors-not-used)
   - [EDA on Laptimes](#eda-on-laptimes)
   - [Compute Average Lap Times](#compute-average-lap-times)
   - [Save final processed dataset](#save-final-processed-dataset)
@@ -15,26 +15,27 @@ Data Processing Document
 # throw out extraneous/irrelevant columns
 df_results_trim <- 
   df_results %>%
-  select(-c(time, position, positionText, points, grid, number))
+  select(-c(time, position, positionText, points, grid, number)) %>%
+  select(-c(milliseconds, rank, fastestLap, fastestLapTime))
 
 # select which attributes to keep about each driver
 df_drivers_trim <-
   df_drivers %>%
   unite(driver_name, c(forename, surname), sep = " ") %>% # driver's full name
-  select(driverId, driver_name, driver_nationality=nationality)
+  select(driverId, driver_name) #, driver_nationality=nationality)
 df_results_plusdrivers <- left_join(df_results_trim, df_drivers_trim, by = "driverId")
 
 # select which attributes to keep about each constructor
 df_constructors_trim <-
   df_constructors %>%
-  select(constructorId, constructor_name=name, constructor_nationality=nationality)
+  select(constructorId, constructor_name=name) #, constructor_nationality=nationality)
 df_results_plusconstructors <- left_join(df_results_plusdrivers, df_constructors_trim, by = "constructorId")
 
 # select which attributes to keep about each race
-df_races_trim <-
+df_circuits_trim <-
   df_races %>%
   select(raceId, year, round, circuitId, race_name=name)
-df_results_plusraces <- left_join(df_results_plusconstructors, df_races_trim, by = "raceId")
+df_results_plusraces <- left_join(df_results_plusconstructors, df_circuits_trim, by = "raceId")
 
 # get status from statusId
 df_results_plusstatus <- left_join(df_results_plusraces, df_status, by = "statusId")
@@ -42,7 +43,7 @@ df_results_plusstatus <- left_join(df_results_plusraces, df_status, by = "status
 # select which attributes to keep about each circuit
 df_circuits_trim <-
   df_circuits %>% 
-  select(circuitId, circuit_name=name, circuitRef, circuit_country=country) 
+  select(circuitId, circuit_name=name) #, circuit_country=country) 
 df_results_pluscircuits <- left_join(df_results_plusstatus, df_circuits_trim, by = c("circuitId"))
 
 # turn all \\N into NAs
@@ -52,27 +53,28 @@ df_clean <-
 df_clean
 ```
 
-    ## # A tibble: 24,900 x 24
-    ##    resultId raceId driverId constructorId positionOrder  laps milliseconds
-    ##       <dbl>  <dbl>    <dbl>         <dbl>         <dbl> <dbl> <chr>       
-    ##  1        1     18        1             1             1    58 5690616     
-    ##  2        2     18        2             2             2    58 5696094     
-    ##  3        3     18        3             3             3    58 5698779     
-    ##  4        4     18        4             4             4    58 5707797     
-    ##  5        5     18        5             1             5    58 5708630     
-    ##  6        6     18        6             3             6    57 <NA>        
-    ##  7        7     18        7             5             7    55 <NA>        
-    ##  8        8     18        8             6             8    53 <NA>        
-    ##  9        9     18        9             2             9    47 <NA>        
-    ## 10       10     18       10             7            10    43 <NA>        
-    ## # ... with 24,890 more rows, and 17 more variables: fastestLap <chr>,
-    ## #   rank <chr>, fastestLapTime <chr>, fastestLapSpeed <chr>, statusId <dbl>,
-    ## #   driver_name <chr>, driver_nationality <chr>, constructor_name <chr>,
-    ## #   constructor_nationality <chr>, year <dbl>, round <dbl>, circuitId <dbl>,
-    ## #   race_name <chr>, status <chr>, circuit_name <chr>, circuitRef <chr>,
-    ## #   circuit_country <chr>
+    ## # A tibble: 24,900 x 16
+    ##    resultId raceId driverId constructorId positionOrder  laps fastestLapSpeed
+    ##       <dbl>  <dbl>    <dbl>         <dbl>         <dbl> <dbl> <chr>          
+    ##  1        1     18        1             1             1    58 218.300        
+    ##  2        2     18        2             2             2    58 217.586        
+    ##  3        3     18        3             3             3    58 216.719        
+    ##  4        4     18        4             4             4    58 215.464        
+    ##  5        5     18        5             1             5    58 218.385        
+    ##  6        6     18        6             3             6    57 212.974        
+    ##  7        7     18        7             5             7    55 213.224        
+    ##  8        8     18        8             6             8    53 217.180        
+    ##  9        9     18        9             2             9    47 215.100        
+    ## 10       10     18       10             7            10    43 213.166        
+    ## # ... with 24,890 more rows, and 9 more variables: statusId <dbl>,
+    ## #   driver_name <chr>, constructor_name <chr>, year <dbl>, round <dbl>,
+    ## #   circuitId <dbl>, race_name <chr>, status <chr>, circuit_name <chr>
 
-## Filter on drivers that drove for multiple constructors (not in use)
+``` r
+write.csv(df_clean,"processed_data/clean_f1.csv", row.names = FALSE)
+```
+
+## Filter on drivers that drove for multiple constructors (not used)
 
 ``` r
 df_multi_drivers <-
@@ -116,25 +118,22 @@ df_results_multi_drivers %>%
   arrange(driver_name)
 ```
 
-    ## # A tibble: 23,059 x 24
-    ##    resultId raceId driverId constructorId positionOrder  laps milliseconds
-    ##       <dbl>  <dbl>    <dbl>         <dbl>         <dbl> <dbl> <chr>       
-    ##  1       16     18       16            10            16     8 <NA>        
-    ##  2       42     19       16            10            20     5 <NA>        
-    ##  3       63     20       16            10            19    56 <NA>        
-    ##  4       87     21       16            10            21     0 <NA>        
-    ##  5      104     22       16            10            16    57 <NA>        
-    ##  6      123     23       16            10            15    67 <NA>        
-    ##  7      148     24       16            10            20    13 <NA>        
-    ##  8      167     25       16            10            19    69 <NA>        
-    ##  9      186     26       16            10            18    10 <NA>        
-    ## 10      203     27       16            10            15    67 5550362     
-    ## # ... with 23,049 more rows, and 17 more variables: fastestLap <chr>,
-    ## #   rank <chr>, fastestLapTime <chr>, fastestLapSpeed <chr>, statusId <dbl>,
-    ## #   driver_name <chr>, driver_nationality <chr>, constructor_name <chr>,
-    ## #   constructor_nationality <chr>, year <dbl>, round <dbl>, circuitId <dbl>,
-    ## #   race_name <chr>, status <chr>, circuit_name <chr>, circuitRef <chr>,
-    ## #   circuit_country <chr>
+    ## # A tibble: 23,059 x 16
+    ##    resultId raceId driverId constructorId positionOrder  laps fastestLapSpeed
+    ##       <dbl>  <dbl>    <dbl>         <dbl>         <dbl> <dbl> <chr>          
+    ##  1       16     18       16            10            16     8 207.461        
+    ##  2       42     19       16            10            20     5 198.891        
+    ##  3       63     20       16            10            19    56 204.136        
+    ##  4       87     21       16            10            21     0 <NA>           
+    ##  5      104     22       16            10            16    57 216.454        
+    ##  6      123     23       16            10            15    67 146.564        
+    ##  7      148     24       16            10            20    13 194.624        
+    ##  8      167     25       16            10            19    69 202.385        
+    ##  9      186     26       16            10            18    10 188.545        
+    ## 10      203     27       16            10            15    67 211.408        
+    ## # ... with 23,049 more rows, and 9 more variables: statusId <dbl>,
+    ## #   driver_name <chr>, constructor_name <chr>, year <dbl>, round <dbl>,
+    ## #   circuitId <dbl>, race_name <chr>, status <chr>, circuit_name <chr>
 
 ## EDA on Laptimes
 
@@ -214,34 +213,37 @@ df_with_avglaptime <-
 df_with_avglaptime <-
   df_with_avglaptime %>% 
   group_by(circuitId) %>%
-  mutate(circuit_avg_lap = mean(avg_lap), circuit_lap_sd = sd(avg_lap))
+  mutate(circuit_avg_lap = mean(avg_lap), circuit_lap_sd = sd(avg_lap)) %>%
+  mutate(std_avg_lap = (avg_lap-circuit_avg_lap)/circuit_lap_sd)
 df_with_avglaptime
 ```
 
-    ## # A tibble: 9,233 x 28
+    ## # A tibble: 9,233 x 21
     ## # Groups:   circuitId [37]
-    ##    resultId raceId driverId constructorId positionOrder  laps milliseconds
-    ##       <dbl>  <dbl>    <dbl>         <dbl>         <dbl> <dbl> <chr>       
-    ##  1        1     18        1             1             1    58 5690616     
-    ##  2        2     18        2             2             2    58 5696094     
-    ##  3        3     18        3             3             3    58 5698779     
-    ##  4        4     18        4             4             4    58 5707797     
-    ##  5        5     18        5             1             5    58 5708630     
-    ##  6        6     18        6             3             6    57 <NA>        
-    ##  7        7     18        7             5             7    55 <NA>        
-    ##  8        8     18        8             6             8    53 <NA>        
-    ##  9        9     18        9             2             9    47 <NA>        
-    ## 10       10     18       10             7            10    43 <NA>        
-    ## # ... with 9,223 more rows, and 21 more variables: fastestLap <chr>,
-    ## #   rank <chr>, fastestLapTime <chr>, fastestLapSpeed <chr>, statusId <dbl>,
-    ## #   driver_name <chr>, driver_nationality <chr>, constructor_name <chr>,
-    ## #   constructor_nationality <chr>, year <dbl>, round <dbl>, circuitId <dbl>,
-    ## #   race_name <chr>, status <chr>, circuit_name <chr>, circuitRef <chr>,
-    ## #   circuit_country <chr>, total_time <dbl>, avg_lap <dbl>,
-    ## #   circuit_avg_lap <dbl>, circuit_lap_sd <dbl>
+    ##    resultId raceId driverId constructorId positionOrder  laps fastestLapSpeed
+    ##       <dbl>  <dbl>    <dbl>         <dbl>         <dbl> <dbl> <chr>          
+    ##  1        1     18        1             1             1    58 218.300        
+    ##  2        2     18        2             2             2    58 217.586        
+    ##  3        3     18        3             3             3    58 216.719        
+    ##  4        4     18        4             4             4    58 215.464        
+    ##  5        5     18        5             1             5    58 218.385        
+    ##  6        6     18        6             3             6    57 212.974        
+    ##  7        7     18        7             5             7    55 213.224        
+    ##  8        8     18        8             6             8    53 217.180        
+    ##  9        9     18        9             2             9    47 215.100        
+    ## 10       10     18       10             7            10    43 213.166        
+    ## # ... with 9,223 more rows, and 14 more variables: statusId <dbl>,
+    ## #   driver_name <chr>, constructor_name <chr>, year <dbl>, round <dbl>,
+    ## #   circuitId <dbl>, race_name <chr>, status <chr>, circuit_name <chr>,
+    ## #   total_time <dbl>, avg_lap <dbl>, circuit_avg_lap <dbl>,
+    ## #   circuit_lap_sd <dbl>, std_avg_lap <dbl>
 
 ## Save final processed dataset
 
 ``` r
 write.csv(df_with_avglaptime,"processed_data/avglaptime.csv", row.names = FALSE)
+```
+
+``` r
+write.csv(df_with_avglaptime,"processed_data/std_avg_laptime.csv", row.names = FALSE)
 ```
