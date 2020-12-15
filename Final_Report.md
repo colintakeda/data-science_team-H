@@ -372,11 +372,16 @@ gap in predictions between fourth and sixth place …
 ![](Final_Report_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
 
 The graph above shows the predicted final position as well as the
-prediction interval for each driver-constructor pair in our data. While
+prediction interval for each drier-constructor pair in our data. While
 we are able to compute the prediction intervals on all possible inputs
 to our model, we have had a hard time finding a way to create an
 effective visual comparing these prediction intervals to the actual
 final position.
+
+If possible given your data, report all estimates with confidence /
+prediction / tolerance intervals. If not possible, clearly explain why
+it is not possible to provide intervals and document what sources of
+uncertainty are not quantified.
 
 ## Questions Remaining
 
