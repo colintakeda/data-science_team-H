@@ -16,8 +16,10 @@ knitr::opts_chunk$set(echo = FALSE)
 library(tidyverse)
 library(modelr)
 
-df_timedata <- read_csv("processed_data/std_avg_laptime.csv")
-df_data <- read_csv("processed_data/clean_f1.csv")
+df_timedata <- read_csv("processed_data/std_avg_laptime.csv") %>% 
+  filter(year >= 2014)
+df_data <- read_csv("processed_data/clean_f1.csv") %>% 
+  filter(year >= 2014)
 ```
 
 ## Data Background
@@ -65,10 +67,6 @@ In our dataset we kept these columns:
 - race_name
 - status
 - circuit_name
-
-```{r, include=FALSE}
-#df_data %>% glimpse()
-```
 
 #### Time data
 
@@ -183,11 +181,12 @@ df_timedata %>%
 
 Constructor and standardized average lap time appear to have a positive and fairly linear relationship. This makes sense because standardizing should correct the distribution to become more linear. Seeing that constructor has an impact on standard average lap time is a good sign because it indicates that there may be some causality and therefore also predictive capability.
 
-#### Modeling by standard average lap time
+#### Modeling by Standard Average Lap Time
 
-First, let's model the `a subset of the data that has completed times` to get a sense of how informative a linear model is for our dataset, solely based upon driver, constructor, and a combination of the two.
+First, let's model the a subset of the data that has completed times to get a sense of how informative a linear model of `standarderized average lap time` is for our dataset, solely based upon driver, constructor, and a combination of the two.
 
-```{r modeling the entire data set with train & validate, echo = TRUE}
+```{r modeling a subset of the data, echo = TRUE}
+
 f_driv_sal <-
   df_timedata %>%
   lm(
@@ -210,36 +209,38 @@ f_drivcons_sal <-
   )
 ```
 
-```{r full fit output, echo = FALSE}
-cat("Full Fit - Just Driver", "\n")
+```{r subset fit output, echo = FALSE, warning = FALSE}
+cat("Subset Fit - Just Driver", "\n")
 cat("  Rsquare", rsquare(f_driv_sal, df_timedata), "\n")
 cat("  MSE", mse(f_driv_sal, df_timedata), "\n")
 
-cat("Full Fit - Just Constructor", "\n")
+cat("Subset Fit - Just Constructor", "\n")
 cat("  Rsquare", rsquare(f_cons_sal, df_timedata), "\n")
 cat("  MSE", mse(f_cons_sal, df_timedata), "\n")
 
-cat("Full Fit - Driver and Constructor", "\n")
+cat("Subset Fit - Driver and Constructor", "\n")
 cat("  Rsquare", rsquare(f_drivcons_sal, df_timedata), "\n")
 cat("  MSE", mse(f_drivcons_sal, df_timedata), "\n")
 ```
 
-Starting with looking at the mean square error (MSE) we can compare the different fits against one another. Between fits, the error is lowest wiTth both `driver and constructor`. The "goodness of fit" is best with both factors involved, which may imply that both are informative towards standard average lap time. However, the difference is quite small between MSEs, so the predictive capabilities of both still seem minute. The order of best to worst fit, solely based upon MSE, is **driver and constructor, just driver, and finally just constructor.** These results may imply that driver is a better predictor of outcome than constructor, but this is not necessarily the case. 
+Starting with looking at the mean square error (MSE) we can compare the different fits against one another. Between fits, the error is lowest with both `driver and constructor`. The "goodness of fit" is best with both factors involved, which may imply that both are informative towards standard average lap time. However, the difference is quite small between MSEs, so the predictive capabilities of both still seem minute. The order of best to worst fit, solely based upon MSE, is **driver and constructor, just driver, and just constructor.** These results may imply that driver is a better predictor of outcome than constructor, but this is not necessarily the case. 
 
-Looking next at our R-square value we see that our models **do not** encapsulate much of the variance of the data. We see the fraction of the 
+Looking next at our R-square value we see that our models **does not** encapsulate much of the variance of the data. We see the fraction of the variance of the data ranges from 4.8% to 8.9%. The order of best to worst fit, solely based upon R-square, is **driver and constructor, just driver, and finally just constructor.** 
 
-These models should be taken with a grain or more of salt as we are using the entire data set to create them, so we don't have a separate training and validation data set. However, using a split of the dataset for training and the rest for validation will not increase the accuracy of the model. With such a low predictive capability already it doesn't appear to be useful to fit additional models.
+These models should be taken with a grain or more of salt as we are using the entire subset of data set to create them, so they are extremely optimistic with the fit and do not cover all observations available. Also, as we see from our R-square values, using driver and/or constructor does not seem very fruitful for modeling standardized average lap time. While this was a useful metric for comparing across circuits, it does not seem to be as useful for modeling. Instead, we should explore other variables to indicate performance. 
 
 #### Modeling Using Final Position Order
+
+Next, we will model the entire data set
 
 ```{r split data into train & validate, echo = TRUE }
 df_data_with_rows <- tibble::rowid_to_column(df_data, "ID")
 
 df_train_pos <-
   df_data_with_rows %>%
-  #group_by(driverId, constructorId, circuitId) %>% 
-  slice_sample(n = 12450) # %>% 
- # ungroup()
+  group_by(driverId, constructorId) %>% 
+  slice_sample(n = 22) %>% 
+  ungroup()
 
 df_validate_pos <-
   anti_join(
