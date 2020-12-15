@@ -375,7 +375,7 @@ If possible given your data, report all estimates with confidence / prediction /
 
 ## Conclusion
 
-
+Our initial driving question sought to answer whether the car or the driver has a greater impact on overall performance. The answer that we came to is that both have a sizable impact on performance, and their individual significance cannot be easily isolated using simple models. Our models demonstrate that using either driver or constructor on its own is a significant predictor for final position order. (which one is a better approximation relies on your sampling received in your train test split). A model using the combination of both variables as a predictor served as the strongest predictor of final position, however it still did not sufficiently account for the final position of the vehicles. If it’s desired to have an accurate predictor of the final position of a Formula 1 race, one should take into account more factors than the two investigated in this project. However, if one wants to know whether the driver or the vehicle is more significant in determining results, the answer is that there is no statistically significant difference between the two factors’ predictive ability to determine race results.
 
 ----------------------------------------
 
