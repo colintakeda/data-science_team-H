@@ -185,9 +185,9 @@ Constructor and standardized average lap time appear to have a positive and fair
 
 #### Modeling by standard average lap time
 
-First, let's model the ***entire data set*** to get a sense of how informative a linear model is for our dataset, solely based upon driver, constructor, and a combination of the two.
+First, let's model the `a subset of the data that has completed times` to get a sense of how informative a linear model is for our dataset, solely based upon driver, constructor, and a combination of the two.
 
-```{r modeling the entire data set with train & validate, echo = TRUE, collapse = FALSE}
+```{r modeling the entire data set with train & validate, echo = TRUE}
 f_driv_sal <-
   df_timedata %>%
   lm(
@@ -224,9 +224,9 @@ cat("  Rsquare", rsquare(f_drivcons_sal, df_timedata), "\n")
 cat("  MSE", mse(f_drivcons_sal, df_timedata), "\n")
 ```
 
-Starting with looking at the mean square error (MSE) we can compare the different fits against one another. Between fits, the error is lowest with both `driver and constructor`. The "goodness of fit" is best with both factors involved, which may imply that both are informative towards standard average lap time. However, the difference is quite small between MSEs, so the predictive capabilities of both at all still seem minute. The order of best fit to worst, solely based upon MSE, is driver and constructor, just driver, and finally just constructor. These results may imply that driver is a better predictor of outcome than constructor, but this is not necessarily the case. 
+Starting with looking at the mean square error (MSE) we can compare the different fits against one another. Between fits, the error is lowest wiTth both `driver and constructor`. The "goodness of fit" is best with both factors involved, which may imply that both are informative towards standard average lap time. However, the difference is quite small between MSEs, so the predictive capabilities of both still seem minute. The order of best to worst fit, solely based upon MSE, is **driver and constructor, just driver, and finally just constructor.** These results may imply that driver is a better predictor of outcome than constructor, but this is not necessarily the case. 
 
-Looking next at our rsquared value we see that our models do **not** have very good coverage of the data. We are looking at each model only covering around `4.6% to 8.1%` of the data, which calls into question the validity the comparisons made for our MSE. The order of best model to worst, solely based upon rsquare, is driver and constructor, just driver, and finally just constructor, so the overall standings seem to follow the exact same trend seen in both MSE and rsquare.
+Looking next at our R-square value we see that our models **do not** encapsulate much of the variance of the data. We see the fraction of the 
 
 These models should be taken with a grain or more of salt as we are using the entire data set to create them, so we don't have a separate training and validation data set. However, using a split of the dataset for training and the rest for validation will not increase the accuracy of the model. With such a low predictive capability already it doesn't appear to be useful to fit additional models.
 
@@ -237,9 +237,9 @@ df_data_with_rows <- tibble::rowid_to_column(df_data, "ID")
 
 df_train_pos <-
   df_data_with_rows %>%
-  group_by(driverId, constructorId, circuitId) %>% 
-  slice_sample(n = 1) %>% 
-  ungroup()
+  #group_by(driverId, constructorId, circuitId) %>% 
+  slice_sample(n = 12450) # %>% 
+ # ungroup()
 
 df_validate_pos <-
   anti_join(
@@ -247,6 +247,9 @@ df_validate_pos <-
     df_train_pos,
     by = "ID"
   )
+
+df_train_pos
+df_validate_pos
 ```
 
 ```{r modeling using positionOrder, echo = TRUE}
