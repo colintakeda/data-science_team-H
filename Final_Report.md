@@ -6,17 +6,21 @@
       - [Does the car or the driver have the greater
         impact?](#does-the-car-or-the-driver-have-the-greater-impact)
   - [Data Tidying](#data-tidying)
-      - [Missing or erroneous data](#missing-or-erroneous-data)
-      - [Final dataset](#final-dataset)
+      - [Time data](#time-data)
       - [Potential Problems](#potential-problems)
   - [Exploratory Data Analysis](#exploratory-data-analysis)
-      - [Standardize by Average Lap
-        Time](#standardize-by-average-lap-time)
-      - [Assess Standardized Average Lap Time
-        vs. Circuit](#assess-standardized-average-lap-time-vs.-circuit)
-  - [Linear Model by final position](#linear-model-by-final-position)
-      - [Uncertainty Quantification / Prediction
-        Interval](#uncertainty-quantification-prediction-interval)
+      - [Standardized Average Lap Time](#standardized-average-lap-time)
+      - [Standardized Average Lap Time by
+        Circuit](#standardized-average-lap-time-by-circuit)
+      - [Driver and Constructor by Standardized Average Lap
+        Time](#driver-and-constructor-by-standardized-average-lap-time)
+      - [Modelling by standard average lap
+        time](#modelling-by-standard-average-lap-time)
+  - [Final Position](#final-position)
+      - [Driver and Constructor by Final
+        Position](#driver-and-constructor-by-final-position)
+      - [Modelling by Final Position](#modelling-by-final-position)
+      - [Probability Intervals](#probability-intervals)
   - [Conclusion](#conclusion)
   - [Rubrics](#rubrics)
 
@@ -88,20 +92,7 @@ The data came in many separate files, including `results.csv`,
 these data frames together by their relevant ID numbers and replace the
 missing values with `NA`.
 
-#### Missing or erroneous data
-
-The column `milliseconds` reports the race completion time for all of
-the drivers that were able to finish the race. However, drivers are
-often unable to complete the full race due to collisions, car
-breakdowns, or other problems, leaving many missing values for total
-race time. We discarded `milliseconds` and supplemented information from
-`laptimes.csv` to compute total race time even when race status was not
-finished. The lap times were understandably missing when the number of
-laps completed was 0, so we removed these observations.
-
-#### Final dataset
-
-In our final dataset we kept these columns:
+In our dataset we kept these columns:
 
   - resultId
   - raceId
@@ -119,7 +110,24 @@ In our final dataset we kept these columns:
   - race\_name
   - status
   - circuit\_name
+
+#### Time data
+
+The column `milliseconds` reports the race completion time for all of
+the drivers that were able to finish the race. However, drivers are
+often unable to complete the full race due to collisions, car
+breakdowns, or other problems, leaving many missing values for total
+race time. We discarded `milliseconds` and created a second dataset
+where we supplemented information from `laptimes.csv` to compute total
+race time even when race status was not finished. The lap times were
+understandably missing when the number of laps completed was 0, so we
+removed these observations. Overall, we still only have lap times for
+9,233 of our 24,900 though.
+
+In this time-filtered dataset we added these columns:
+
   - total\_time
+  - avg\_lap
   - circuit\_avg\_lap
   - circuit\_lap\_sd
   - std\_avg\_lap
@@ -131,18 +139,19 @@ In our final dataset we kept these columns:
   - Rules Era can change performance
   - New drivers are skewed because they don’t have as many data points
     yet
-  - This data is for 70 years of races and many things have changed over
-    that period
+  - This data is for 70 years of races and [formula racing has changed a
+    lot](https://youtu.be/hgLQWIAaCmY)
+      - Consider filtering on year \>= 2000
 
 -----
 
 ## Exploratory Data Analysis
 
-#### Standardize by Average Lap Time
+#### Standardized Average Lap Time
 
 ![](Final_Report_files/figure-gfm/finish%20race-1.png)<!-- -->
 
-Upon consideration, final position ranking is heavily reliant on how
+As shown in the graph above, final position is heavily reliant on how
 many laps the driver was able to complete. And almost a third of the
 time, collisions or car troubles put drivers out of commission before
 the race is finished. These final standings are not reflective of how
@@ -157,12 +166,12 @@ correct for this difference across circuits.
 
 ![](Final_Report_files/figure-gfm/average%20lap%20time%20per%20circuit-1.png)<!-- -->
 
-The average lap time can be drastically different across circuits due to
-the differences in track length and shape, so we need a way to compare
-average lap time across circuits. Dividing average lap time by average
-lap time per circuit doesn’t work because it doesn’t account for the
-range of average lap time on each circuit. To correct for the impact of
-circuit on average lap time, we standardized by circuit:
+The average lap time varies across circuits due to the differences in
+track length and shape, so we need a way to compare average lap time
+across circuits. Dividing average lap time by average lap time per
+circuit doesn’t work because it doesn’t account for the range of average
+lap time on each circuit. To correct for the impact of circuit on
+average lap time, we standardized by circuit:
 
 \[\mu = \sum_{i}^{n} \frac{x_i}{n}\]
 
@@ -173,45 +182,90 @@ circuit on average lap time, we standardized by circuit:
 where \(x\) is the data, \(\mu\) is the mean, \(\sigma\) is the standard
 deviation, and \(z\) is the standard score of \(x\)
 
-![](Final_Report_files/figure-gfm/unnamed-chunk-1-1.png)<!-- -->
+#### Standardized Average Lap Time by Circuit
 
-First of all, the graph of standardized average lap time by final
-position shown above confirms the obvious: final ranking and
-standardized average lap time are related. The faster you drive, the
-more likely you are to win the race\! Secondly, there is an increasing
-variability in the higher positions. This is almost certainly explained
-by the fact that collisions or other car troubles reduce the likelihood
-of being able to finish the race, thus increasing their position number,
-independent of how well they were performing before their accident. The
-vertical stratification could due to more competitive races raising the
-standard for placing high, even when competing on the same track.
-
-#### Assess Standardized Average Lap Time vs. Circuit
-
-![](Final_Report_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
+![](Final_Report_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
 
 The graph above shows a visual comparison of standardized average lap
-time by circuit. What we hope to see is that standardized average lap
-time minimizes the effect of circuit, and it seems it does because the
-slope of the median is small in magnitude relative to the range of the
-standardized average lap time. In conclusion, standardized average lap
-time captures overall performance in a way that minimizes the effect of
-number of laps driven and what circuit the race was held on.
+time by circuit. The slope of the median is small in magnitude relative
+to the range of the standardized average lap time, showing that
+standardizing the average lap time successfully minimizes the effect of
+circuit.
 
-However, when we applied a linear model using standard average lap time
-as the performance metric with driver and constructor as inputs, we
-found that it had an rsquare of only 0.08. This discouraging result told
-us that standardized average lap time is very weakly correlated to
-driver and constructor, so we decided to take our modelling attempts in
-another direction.
+#### Driver and Constructor by Standardized Average Lap Time
 
-## Linear Model by final position
+    ## Warning: Removed 384 rows containing non-finite values (stat_boxplot).
 
-\\TODO: Using final position in the race as our metric of performance,
-the linear model relating driver and final position has an rsquare of
-0.25 …
+![](Final_Report_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
 
-#### Uncertainty Quantification / Prediction Interval
+Constructor and standardized average lap time appear to have a positive
+and fairly linear relationship. This makes sense because standardizing
+should correct the distribution to become more linear. Seeing that
+constructor has an impact on standard average lap time is a good sign
+because it indicates that there may be some causality and therefore also
+predictive capability.
+
+#### Modelling by standard average lap time
+
+    ## [1] "Full Fit - Just Driver"
+
+    ## Rsquare 0.05748965
+
+    ## MSE 0.9387334
+
+    ## [1] "Full Fit - Just Constructor"
+
+    ## Rsquare 0.04633339
+
+    ## MSE 0.9498449
+
+    ## [1] "Full Fit - Driver and Constructor"
+
+    ## Rsquare 0.08119187
+
+    ## MSE 0.9151261
+
+Looking at our mean square error first we can compare our different
+models against one another. Between models, the error is lowest with
+both `driver and constructor` which is a good sign that both are
+informative towards lap time. The order of best model to worst, solely
+based upon MSE, is driver and constructor, just driver, and finally just
+constructor. These results may imply that driver is a better predictor
+of outcome than constructor, but this is not necessarily the case.
+
+Looking next at our rsquared value we see that our models do **not**
+have very good coverage of the data. We are looking at each model only
+covering around `4.6% to 8.1%` of the data, which calls into question
+the validity the comparisons made for our MSE. The order of best model
+to worst, solely based upon rsquare, is driver and constructor, just
+driver, and finally just constructor, so the overall standings seem to
+follow the exact same trend seen in both MSE and rsquare.
+
+These models should be taken with a grain or more of salt as we are
+using the entire data set to create them, so we don’t have a separate
+training and validation data set. However, using a split of the dataset
+for training and the rest for validation will not increase the accuracy
+of the model. With such a low predictive capability already it doesn’t
+appear to be useful to fit additional models.
+
+## Final Position
+
+#### Driver and Constructor by Final Position
+
+    ## # A tibble: 1 x 1
+    ##   mean_pos
+    ##      <dbl>
+    ## 1     13.0
+
+![](Final_Report_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+
+Constructor and final position have an interesting relationship that is
+not linear. There are also relatively few constructors with a mean final
+position of less than the overall average final position.
+
+#### Modelling by Final Position
+
+#### Probability Intervals
 
 If possible given your data, report all estimates with confidence /
 prediction / tolerance intervals. If not possible, clearly explain why

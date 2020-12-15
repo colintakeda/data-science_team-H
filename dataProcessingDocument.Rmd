@@ -30,19 +30,20 @@ df_circuits = read_csv('data/circuits.csv')
 # throw out extraneous/irrelevant columns
 df_results_trim <- 
   df_results %>%
-  select(-c(time, position, positionText, points, grid, number))
+  select(-c(time, position, positionText, points, grid, number)) %>%
+  select(-c(milliseconds, rank, fastestLap, fastestLapTime))
 
 # select which attributes to keep about each driver
 df_drivers_trim <-
   df_drivers %>%
   unite(driver_name, c(forename, surname), sep = " ") %>% # driver's full name
-  select(driverId, driver_name, driver_nationality=nationality)
+  select(driverId, driver_name) #, driver_nationality=nationality)
 df_results_plusdrivers <- left_join(df_results_trim, df_drivers_trim, by = "driverId")
 
 # select which attributes to keep about each constructor
 df_constructors_trim <-
   df_constructors %>%
-  select(constructorId, constructor_name=name, constructor_nationality=nationality)
+  select(constructorId, constructor_name=name) #, constructor_nationality=nationality)
 df_results_plusconstructors <- left_join(df_results_plusdrivers, df_constructors_trim, by = "constructorId")
 
 # select which attributes to keep about each race
@@ -57,7 +58,7 @@ df_results_plusstatus <- left_join(df_results_plusraces, df_status, by = "status
 # select which attributes to keep about each circuit
 df_circuits_trim <-
   df_circuits %>% 
-  select(circuitId, circuit_name=name, circuitRef, circuit_country=country) 
+  select(circuitId, circuit_name=name) #, circuit_country=country) 
 df_results_pluscircuits <- left_join(df_results_plusstatus, df_circuits_trim, by = c("circuitId"))
 
 # turn all \\N into NAs
@@ -67,7 +68,12 @@ df_clean <-
 df_clean
 ```
 
-## Filter on drivers that drove for multiple constructors (not in use)
+
+```{r}
+write.csv(df_clean,"processed_data/clean_f1.csv", row.names = FALSE)
+```
+
+## Filter on drivers that drove for multiple constructors (not used)
 
 ``` {r drivers that drove for multiple constructors}
 df_multi_drivers <-
@@ -155,7 +161,8 @@ df_with_avglaptime <-
 df_with_avglaptime <-
   df_with_avglaptime %>% 
   group_by(circuitId) %>%
-  mutate(circuit_avg_lap = mean(avg_lap), circuit_lap_sd = sd(avg_lap))
+  mutate(circuit_avg_lap = mean(avg_lap), circuit_lap_sd = sd(avg_lap)) %>%
+  mutate(std_avg_lap = (avg_lap-circuit_avg_lap)/circuit_lap_sd)
 df_with_avglaptime
 ```
 
@@ -166,3 +173,7 @@ df_with_avglaptime
 write.csv(df_with_avglaptime,"processed_data/avglaptime.csv", row.names = FALSE)
 ```
 
+
+```{r}
+write.csv(df_with_avglaptime,"processed_data/std_avg_laptime.csv", row.names = FALSE)
+```

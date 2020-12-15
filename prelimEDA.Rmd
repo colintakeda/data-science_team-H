@@ -5,16 +5,10 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-```
-
-```{r}
 library(tidyverse)
-dataFile <- "processed_data/std_avg_laptime.csv"
-df_avgLapTimes <- read.csv(dataFile)
-```
 
-```{r}
-glimpse(df_avgLapTimes)
+df_avgLapTimes <- read.csv("processed_data/std_avg_laptime.csv")
+df_cleandata <- read_csv("processed_data/clean_f1.csv")
 ```
 
 ```{r fig.width = 20,fig.height=10}
@@ -23,19 +17,22 @@ df_avgLapTimes %>%
   ggplot(mapping = aes(x = driver_name, y = std_avg_lap)) +
   geom_boxplot() +
   ylim(-2,2) +
+  theme_minimal() +
   theme(axis.text.x = element_text(angle = 90,vjust = 0.5, hjust = 1)) 
 ```
-```{r}
 
+```{r}
 df_avgLapTimes %>%
   mutate(constructor_name = fct_reorder(as.character(constructor_name),std_avg_lap, .fun = mean))%>%
   ggplot(mapping = aes(x = constructor_name, y = std_avg_lap)) +
   geom_boxplot()+
   ylim(-2,2)+
+  theme_minimal() +
   theme(axis.text.x = element_text(angle = 90,vjust = 0.5, hjust = 1))+
   labs(x = "Vehicle Constructor Name",y = "Standardized Average Lap Time (ms)")
 ```
 
+<<<<<<< HEAD
 ```{r}
 dataFile <- "processed_data/clean_f1.csv"
 df_cleanLapTimes <- read.csv(dataFile)
@@ -47,14 +44,16 @@ df_cleanLapTimes %>%
   mutate(driver_name = fct_reorder(as.character(driver_name),positionOrder))%>%
   ggplot(mapping = aes(x = driver_name, y = positionOrder)) +
   geom_boxplot() +
-  theme(axis.text.x = element_text(angle = 90,vjust = 0.5, hjust = 1))
+  theme(axis.text.x = element_text(angle = 90,vjust = 0.5, hjust = 1))+
+  labs(x = "Vehicle Driver Name", y = "Final Position Ranking")
 ```
+
 ```{r}
 df_cleanLapTimes %>%
   filter(year > 2014)%>%
   mutate(constructor_name = fct_reorder(as.character(constructor_name),positionOrder))%>%
   ggplot(mapping = aes(x = constructor_name, y = positionOrder)) +
   geom_boxplot() +
-  theme(axis.text.x = element_text(angle = 90,vjust = 0.5, hjust = 1))
+  theme(axis.text.x = element_text(angle = 90,vjust = 0.5, hjust = 1)) +
+  labs(x = "Vehicle Constructor Name",y = "Final Position Ranking")
 ```
-

@@ -1,10 +1,12 @@
 ---
 title: ""
+author: "Lilo Heinrich, Tim Novak, and Colin Takeda"
+date: 12-14-2020
 output:
   github_document:
-    toc: yes
+    toc: true
   pdf_document:
-    toc: yes
+    toc: true
 ---
  
 <center> <h1>Formula 1 Racing: <br /> Does the car or the driver have the greater impact?</h1> </center>
@@ -14,7 +16,8 @@ knitr::opts_chunk$set(echo = FALSE)
 library(tidyverse)
 library(modelr)
 
-df_data <- read_csv("processed_data/std_avg_laptime.csv")
+df_timedata <- read_csv("processed_data/std_avg_laptime.csv")
+df_data <- read_csv("processed_data/clean_f1.csv")
 ```
 
 ## Data Background
@@ -44,13 +47,7 @@ Unlike most sports, Formula 1 racing is heavily reliant on the performance capab
 
 The data came in many separate files, including `results.csv`, `drivers.csv`, `constructors.csv`, `circuits.csv`, `races.csv`, `status.csv`, and `laptimes.csv`. Our first step was to join all of these data frames together by their relevant ID numbers and replace the missing values with `NA`.
 
-#### Missing or erroneous data
-
-The column `milliseconds` reports the race completion time for all of the drivers that were able to finish the race. However, drivers are often unable to complete the full race due to collisions, car breakdowns, or other problems, leaving many missing values for total race time. We discarded `milliseconds` and supplemented information from `laptimes.csv` to compute total race time even when race status was not finished. The lap times were understandably missing when the number of laps completed was 0, so we removed these observations.
-
-#### Final dataset
-
-In our final dataset we kept these columns: 
+In our dataset we kept these columns: 
 
 - resultId
 - raceId
@@ -68,25 +65,43 @@ In our final dataset we kept these columns:
 - race_name
 - status
 - circuit_name
+
+```{r, include=FALSE}
+#df_data %>% glimpse()
+```
+
+#### Time data
+
+The column `milliseconds` reports the race completion time for all of the drivers that were able to finish the race. However, drivers are often unable to complete the full race due to collisions, car breakdowns, or other problems, leaving many missing values for total race time. We discarded `milliseconds` and created a second dataset where we supplemented information from `laptimes.csv` to compute total race time even when race status was not finished. The lap times were understandably missing when the number of laps completed was 0, so we removed these observations. Overall, we still only have lap times for 9,233 of our 24,900 though. 
+
+In this time-filtered dataset we added these columns: 
+
 - total_time
+- avg_lap
 - circuit_avg_lap
 - circuit_lap_sd
 - std_avg_lap
 
+```{r, include=FALSE}
+#df_timedata %>% glimpse()
+```
+
 #### Potential Problems
 
 - Some examples of [constructor name changes](https://www.reddit.com/r/formula1/comments/1dos3r/i_made_a_diagram_to_show_how_current_f1_teams/)
-- Rules Era can change performance
+- Rules change year to year and can significantly affect performance
 - New drivers are skewed because they don't have as many data points yet
-- This data is for 70 years of races and many things have changed over that period
+- This data is for 70 years of races and [formula racing has changed a lot](https://youtu.be/hgLQWIAaCmY)
+
+  - Consider filtering on year >= 2000
 
 ----------------------------------------
 
 ## Exploratory Data Analysis
  
-#### Standardize by Average Lap Time
+#### Standardized Average Lap Time
 
-```{r finish race, fig.width=8, fig.height=6, echo=FALSE}
+```{r finish race, echo=FALSE}
 df_data %>% 
   group_by(positionOrder) %>%
   mutate(mean_laps = mean(laps)) %>%
@@ -95,20 +110,21 @@ df_data %>%
   geom_point() + 
   labs(
     y = "Mean laps completed",
-    x = "Final position ranking"
+    x = "Final position"
   ) + 
   theme_minimal() + 
   geom_line(color = "blue")
 ```
 
-Upon consideration, final position ranking is heavily reliant on how many laps the driver was able to complete. And almost a third of the time, collisions or car troubles put drivers out of commission before the race is finished. These final standings are not reflective of how well the driver was doing before that point, so we decided to use average lap time to create a more comprehensive performance metric.
+As shown in the graph above, final position is heavily reliant on how many laps the driver was able to complete. And almost a third of the time, collisions or car troubles put drivers out of commission before the race is finished. These final standings are not reflective of how well the driver was doing before that point, so we decided to use average lap time to create a more comprehensive performance metric.
 
 Average lap time is a comprehensive measure of how well a driver performed in a race because it is informed only on the laps they were able to complete, unlike final position. The only problem is that it doesn't account for the effect of circuit on lap time, so we need to correct for this difference across circuits.
 
 ```{r average lap time per circuit, echo=FALSE}
-df_data %>%
-  ggplot(aes(fct_reorder(as.factor(circuitId), circuit_avg_lap), circuit_avg_lap)) + 
-  geom_point() +
+df_timedata %>%
+  ggplot(aes(fct_reorder(as.factor(circuitId), avg_lap), avg_lap)) + 
+  geom_boxplot() +
+  theme_minimal() +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) + 
   labs(
     x = "Circuit ID number",
@@ -116,7 +132,7 @@ df_data %>%
   )
 ```
 
-The average lap time can be drastically different across circuits due to the differences in track length and shape, so we need a way to compare average lap time across circuits. Dividing average lap time by average lap time per circuit doesn't work because it doesn't account for the range of average lap time on each circuit. To correct for the impact of circuit on average lap time, we standardized by circuit:
+The average lap time varies across circuits due to the differences in track length and shape, so we need a way to compare average lap time across circuits. Dividing average lap time by average lap time per circuit doesn't work because it doesn't account for the range of average lap time on each circuit. To correct for the impact of circuit on average lap time, we standardized by circuit:
 
 $$\mu = \sum_{i}^{n} \frac{x_i}{n}$$
 
@@ -126,47 +142,196 @@ $$z = \frac{x-\mu}{\sigma}$$
 
 where $x$ is the data, $\mu$ is the mean, $\sigma$ is the standard deviation, and $z$ is the standard score of $x$
 
-
-```{r}
-df_data %>%
-  ggplot(aes(as.factor(positionOrder), std_avg_lap)) +
-  geom_boxplot() + 
-  labs(
-    x = "Position number",
-    y = "standardized average lap time",
-    title = "Comparing standardized average lap time by final position"
-  ) + 
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
-#+ 
-#  ylim(-2, 2)
-```
-
-First of all, the graph of standardized average lap time by final position shown above confirms the obvious: final ranking and standardized average lap time are related. The faster you drive, the more likely you are to win the race! Secondly, there is an increasing variability in the higher positions. This is almost certainly explained by the fact that collisions or other car troubles reduce the likelihood of being able to finish the race, thus increasing their position number, independent of how well they were performing before their accident. The vertical stratification could due to more competitive races raising the standard for placing high, even when competing on the same track. 
-
-#### Assess Standardized Average Lap Time vs. Circuit
+#### Standardized Average Lap Time by Circuit
 
 ```{r, echo = FALSE}
-df_data %>%
+df_timedata %>%
   ggplot(aes(fct_reorder(as.factor(circuitId), std_avg_lap), std_avg_lap)) +
   geom_boxplot() + 
   labs(
     x = "Circuit ID number",
-    y = "standardized average lap time",
-    title = "Comparing standardized average lap time by circuit"
+    y = "standardized average lap time"
+#    title = "Comparing standardized average lap time by circuit"
   ) + 
+  theme_minimal() +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
 ```
 
-The graph above shows a visual comparison of standardized average lap time by circuit. What we hope to see is that standardized average lap time minimizes the effect of circuit, and it seems it does because the slope of the median is small in magnitude relative to the range of the standardized average lap time. In conclusion, standardized average lap time captures overall performance in a way that minimizes the effect of number of laps driven and what circuit the race was held on.
+The graph above shows a visual comparison of standardized average lap time by circuit. The slope of the median is small in magnitude relative to the range of the standardized average lap time, showing that standardizing the average lap time successfully minimizes the effect of circuit. 
 
-However, when we applied a linear model using standard average lap time as the performance metric with driver and constructor as inputs, we found that it had an rsquare of only 0.08. This discouraging result told us that standardized average lap time is very weakly correlated to driver and constructor, so we decided to take our modelling attempts in another direction.
+#### Driver and Constructor by Standardized Average Lap Time
 
-## Linear Model by final position
+```{r fig.width = 20,fig.height=10, echo=FALSE,  warning = FALSE}
+#df_timedata %>%
+#  mutate(driver_name = fct_reorder(as.character(driver_name),std_avg_lap))%>%
+#  ggplot(mapping = aes(x = driver_name, y = std_avg_lap)) +
+#  geom_boxplot() +
+#  theme_minimal() +
+##  ylim(-2,2) +
+#  theme(axis.text.x = element_text(angle = 90,vjust = 0.5, hjust = 1))+
+#  labs(x = "Driver Name",y = "Standardized Average Lap Time (ms)")
 
-\\TODO:
-Using final position in the race as our metric of performance, the linear model relating driver and final position has an rsquare of 0.25 ... 
+df_timedata %>%
+  mutate(constructor_name = fct_reorder(as.character(constructor_name),std_avg_lap))%>%
+  ggplot(mapping = aes(x = constructor_name, y = std_avg_lap)) +
+  geom_boxplot()+
+  theme_minimal() +
+  ylim(-2,2) +
+  theme(axis.text.x = element_text(angle = 90,vjust = 0.5, hjust = 1))+
+  labs(x = "Vehicle Constructor Name",y = "Standardized Average Lap Time (ms)")
+```
 
-#### Uncertainty Quantification / Prediction Interval
+Constructor and standardized average lap time appear to have a positive and fairly linear relationship. This makes sense because standardizing should correct the distribution to become more linear. Seeing that constructor has an impact on standard average lap time is a good sign because it indicates that there may be some causality and therefore also predictive capability.
+
+#### Modeling by standard average lap time
+
+First, let's model the ***entire data set*** to get a sense of how informative a linear model is for our dataset, solely based upon driver, constructor, and a combination of the two.
+
+```{r modeling the entire data set with train & validate, echo = TRUE, collapse = FALSE}
+f_driv_sal <-
+  df_timedata %>%
+  lm(
+    data = .,
+    formula = std_avg_lap ~ as.factor(driverId)
+  )
+
+f_cons_sal <- 
+  df_timedata %>% 
+  lm(
+    data = .,
+    formula = std_avg_lap ~ as.factor(constructorId)
+  )
+
+f_drivcons_sal <- 
+  df_timedata %>% 
+  lm(
+    data = .,
+    formula = std_avg_lap ~ as.factor(driverId) + as.factor(constructorId)
+  )
+```
+
+```{r full fit output, echo = FALSE}
+cat("Full Fit - Just Driver", "\n")
+cat("  Rsquare", rsquare(f_driv_sal, df_timedata), "\n")
+cat("  MSE", mse(f_driv_sal, df_timedata), "\n")
+
+cat("Full Fit - Just Constructor", "\n")
+cat("  Rsquare", rsquare(f_cons_sal, df_timedata), "\n")
+cat("  MSE", mse(f_cons_sal, df_timedata), "\n")
+
+cat("Full Fit - Driver and Constructor", "\n")
+cat("  Rsquare", rsquare(f_drivcons_sal, df_timedata), "\n")
+cat("  MSE", mse(f_drivcons_sal, df_timedata), "\n")
+```
+
+Starting with looking at the mean square error (MSE) we can compare the different fits against one another. Between fits, the error is lowest with both `driver and constructor`. The "goodness of fit" is best with both factors involved, which may imply that both are informative towards standard average lap time. However, the difference is quite small between MSEs, so the predictive capabilities of both at all still seem minute. The order of best fit to worst, solely based upon MSE, is driver and constructor, just driver, and finally just constructor. These results may imply that driver is a better predictor of outcome than constructor, but this is not necessarily the case. 
+
+Looking next at our rsquared value we see that our models do **not** have very good coverage of the data. We are looking at each model only covering around `4.6% to 8.1%` of the data, which calls into question the validity the comparisons made for our MSE. The order of best model to worst, solely based upon rsquare, is driver and constructor, just driver, and finally just constructor, so the overall standings seem to follow the exact same trend seen in both MSE and rsquare.
+
+These models should be taken with a grain or more of salt as we are using the entire data set to create them, so we don't have a separate training and validation data set. However, using a split of the dataset for training and the rest for validation will not increase the accuracy of the model. With such a low predictive capability already it doesn't appear to be useful to fit additional models.
+
+#### Modeling Using Final Position Order
+
+```{r split data into train & validate, echo = TRUE }
+df_data_with_rows <- tibble::rowid_to_column(df_data, "ID")
+
+df_train_pos <-
+  df_data_with_rows %>%
+  group_by(driverId, constructorId, circuitId) %>% 
+  slice_sample(n = 1) %>% 
+  ungroup()
+
+df_validate_pos <-
+  anti_join(
+    df_data_with_rows,
+    df_train_pos,
+    by = "ID"
+  )
+```
+
+```{r modeling using positionOrder, echo = TRUE}
+f_driv_pos <-
+  df_train_pos %>%
+  lm(
+    data = .,
+    formula = positionOrder ~ as.factor(driverId)
+  )
+
+f_cons_pos <- 
+  df_train_pos %>% 
+  lm(
+    data = .,
+    formula = positionOrder ~ as.factor(constructorId)
+  )
+
+f_drivcons_pos <- 
+  df_train_pos %>% 
+  lm(
+    data = .,
+    formula = positionOrder ~ as.factor(driverId) + as.factor(constructorId)
+  )
+```
+
+```{r train fit outputs, echo = FALSE, warning = FALSE}
+cat("Train Fit - Just Driver", "\n")
+cat("  Rsquare", rsquare(f_driv_pos, df_validate_pos), "\n")
+cat("  MSE", mse(f_driv_pos, df_validate_pos), "\n")
+
+cat("Train Fit - Just Constructor", "\n")
+cat("  Rsquare", rsquare(f_cons_pos, df_validate_pos), "\n")
+cat("  MSE", mse(f_cons_pos, df_validate_pos), "\n")
+
+cat("Train Fit - Driver and Constructor", "\n")
+cat("  Rsquare", rsquare(f_drivcons_pos, df_validate_pos), "\n")
+cat("  MSE", mse(f_drivcons_pos, df_validate_pos), "\n")
+```
+
+
+
+## Final Position
+
+#### Driver and Constructor by Final Position
+
+```{r fig.width = 20,fig.height=15, echo=FALSE}
+#df_data %>%
+#  mutate(driver_name = fct_reorder(as.character(driver_name),positionOrder))%>%
+#  ggplot(mapping = aes(x = driver_name, y = positionOrder)) +
+#  geom_boxplot() +
+#  theme_minimal() +
+#  theme(axis.text.x = element_text(angle = 90,vjust = 0.5, hjust = 1))+
+#  labs(x = "Driver Name",y = "Final position")
+
+#df_data %>%
+#  mutate(constructor_name = fct_reorder(as.character(constructor_name),positionOrder))%>%
+#  ggplot(mapping = aes(x = constructor_name, y = positionOrder)) +
+#  geom_boxplot()+
+#  theme_minimal() +
+#  theme(axis.text.x = element_text(angle = 90,vjust = 0.5, hjust = 1))+
+# labs(x = "Vehicle Constructor Name",y = "Final position")
+
+df_data %>%
+  summarise(mean_pos = mean(positionOrder))
+
+df_data %>%
+  mutate(mean_pos = mean(positionOrder)) %>%
+  group_by(constructor_name) %>%
+  mutate(mean_posOrder = mean(positionOrder)) %>%
+  ungroup() %>%
+  mutate(constructor_name = fct_reorder(as.character(constructor_name),mean_posOrder))%>%
+  
+  ggplot() +
+  geom_point(aes(x = constructor_name, y = mean_posOrder))+
+  geom_abline(aes(slope=0, intercept=mean_pos, color="red")) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90,vjust = 0.5, hjust = 1))+
+  labs(x = "Vehicle Constructor Name",y = "Mean final position")
+```
+
+Constructor and final position have an interesting relationship that is not linear. There are also relatively few constructors with a mean final position of less than the overall average final position.
+
+#### Modelling by Final Position
+
+#### Probability Intervals
 
 If possible given your data, report all estimates with confidence / prediction / tolerance intervals. If not possible, clearly explain why it is not possible to provide intervals and document what sources of uncertainty are not quantified.
 
@@ -174,6 +339,7 @@ If possible given your data, report all estimates with confidence / prediction /
 ----------------------------------------
 
 ## Conclusion
+
 testing testing testing
 
 ----------------------------------------

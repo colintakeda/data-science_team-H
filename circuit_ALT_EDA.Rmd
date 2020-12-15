@@ -14,7 +14,7 @@ library(modelr)
 ```
 
 ```{r get datasets, include = FALSE}
-df_avglaptime <- read_csv("processed_data/avglaptime.csv")
+df_stdavglap <- read_csv("processed_data/avglaptime.csv")
 ```
 
 ## Compute Average Lap Time per Circuit
@@ -26,7 +26,7 @@ Using average lap time as our indicator of performance:
  - The only problem is that it doesn't account for the difficulty of the circuit, so we need a metric for how hard a circuit is: the average lap time for that entire circuit.
 
 ```{r}
-df_avglaptime %>%
+df_stdavglap %>%
   ggplot(aes(fct_reorder(as.factor(circuitId), circuit_avg_lap), circuit_avg_lap)) + 
   geom_point() +
   theme(axis.text.x = element_text(angle = 270, vjust = 0.5, hjust = 0)) + 
@@ -55,11 +55,6 @@ where $x$ is the data, $\mu$ is the mean, $\sigma$ is the standard deviation, an
 
  
 ```{r}
-df_stdavglap <- 
-  df_avglaptime %>%
-  mutate(std_avg_lap = (avg_lap-circuit_avg_lap)/circuit_lap_sd)
-df_stdavglap
-
 df_stdavglap %>%
   select(raceId, driverId, positionOrder, laps, status, avg_lap, std_avg_lap)
 ```
