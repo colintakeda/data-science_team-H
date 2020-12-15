@@ -248,6 +248,8 @@ Next, we will model the entire data set
 ```{r split data into train & validate, echo = FALSE }
 df_data_with_rows <- tibble::rowid_to_column(df_data, "ID")
 
+set.seed(555)
+
 df_validate_pos <-
   df_data_with_rows %>%
   group_by(driverId, constructorId) %>% 
@@ -301,6 +303,8 @@ cat("Train Fit - Driver and Constructor", "\n")
 cat("  Rsquare", rsquare(f_drivcons_pos, df_validate_pos), "\n")
 cat("  MSE", mse(f_drivcons_pos, df_validate_pos), "\n")
 ```
+
+After multiple samples we see that the R-squared values for just driver and just constructor tend to range from 30% to 37% and a MSE that ranges from 22 to 24. The just driver and just constructor fits seem to very close in R-squared and MSE to one another and there is no significant difference between the two. In comparison, driver and constructor has an R-squared value that tends to range from 33% to 41% and a MSE of 20 to 23. The driver and constructor fit tends to always be better than either the just driver or just constructor fit. Overall, the the range of values for the driver and constructor fit is promising given the multitude of outside factors in racing that is not covered by the investigated factors
 
 #### Prediction Interval
 
@@ -369,7 +373,6 @@ If possible given your data, report all estimates with confidence / prediction /
 - Can you look at track changes over the years and effects on lap times?
 - How much does starting position have an effect on the final ending position?
 - Using the history of an individual driver's performances can you predict their lap times in future races?
-- 
 
 ----------------------------------------
 
@@ -378,38 +381,3 @@ If possible given your data, report all estimates with confidence / prediction /
 Our initial driving question sought to answer whether the car or the driver has a greater impact on overall performance. The answer that we came to is that both have a sizable impact on performance, and their individual significance cannot be easily isolated using simple models. Our models demonstrate that using either driver or constructor on its own is a significant predictor for final position order. (which one is a better approximation relies on your sampling received in your train test split). A model using the combination of both variables as a predictor served as the strongest predictor of final position, however it still did not sufficiently account for the final position of the vehicles. If it’s desired to have an accurate predictor of the final position of a Formula 1 race, one should take into account more factors than the two investigated in this project. However, if one wants to know whether the driver or the vehicle is more significant in determining results, the answer is that there is no statistically significant difference between the two factors’ predictive ability to determine race results.
 
 ----------------------------------------
-
-
-
-## Rubrics
-
-Questions to answer:
-
-- What question did you set out to answer?
-- What data did you find to help answer that question?
-- What is the relevant background on your question?
-- What level of (quantified) certainty do you have in your results?
-- What conclusions did you come to?
-- What questions do you have remaining?
-- Make sure your report contains at least one presentation-quality figure
-
-Observed:
-
-- (The usual stuff)
-- Must provide background
-- Must posit a question
-
-Supported:
-
-- (The usual stuff)
-- Some analysis must support answering question
-
-Assessed:
-
-- (The usual stuff)
-- All estimates must be provided with some quantification of uncertainty (e.g. confidence / prediction / tolerance intervals), OR a justification for why producing an interval is not possible and documentation for sources of uncertainty not accounted for.
-
-Styled:
-
-- (The usual stuff)
-- Report must contain at least one presentation-quality figure
