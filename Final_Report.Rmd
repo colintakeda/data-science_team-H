@@ -229,9 +229,50 @@ Looking next at our R-square value we see that our models **does not** encapsula
 
 These models should be taken with a grain or more of salt as we are using the entire subset of data set to create them, so they are extremely optimistic with the fit and do not cover all observations available. Also, as we see from our R-square values, using driver and/or constructor does not seem very fruitful for modeling standardized average lap time. While this was a useful metric for comparing across circuits, it does not seem to be as useful for modeling. Instead, we should explore other variables to indicate performance. 
 
-#### Modeling Using Final Position Order
+## Final Position
 
-Next, we will model the entire data set
+#### Driver and Constructor by Final Position
+
+```{r fig.width = 20,fig.height=15, echo=FALSE}
+#df_data %>%
+#  mutate(driver_name = fct_reorder(as.character(driver_name),positionOrder))%>%
+#  ggplot(mapping = aes(x = driver_name, y = positionOrder)) +
+#  geom_boxplot() +
+#  theme_minimal() +
+#  theme(axis.text.x = element_text(angle = 90,vjust = 0.5, hjust = 1))+
+#  labs(x = "Driver Name",y = "Final position")
+
+#df_data %>%
+#  mutate(constructor_name = fct_reorder(as.character(constructor_name),positionOrder))%>%
+#  ggplot(mapping = aes(x = constructor_name, y = positionOrder)) +
+#  geom_boxplot()+
+#  theme_minimal() +
+#  theme(axis.text.x = element_text(angle = 90,vjust = 0.5, hjust = 1))+
+# labs(x = "Vehicle Constructor Name",y = "Final position")
+
+df_data %>%
+  summarise(mean_pos = mean(positionOrder))
+
+df_data %>%
+  mutate(mean_pos = mean(positionOrder)) %>%
+  group_by(constructor_name) %>%
+  mutate(mean_posOrder = mean(positionOrder)) %>%
+  ungroup() %>%
+  mutate(constructor_name = fct_reorder(as.character(constructor_name),mean_posOrder))%>%
+  
+  ggplot() +
+  geom_point(aes(x = constructor_name, y = mean_posOrder))+
+  geom_abline(aes(slope=0, intercept=mean_pos, color="red")) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90,vjust = 0.5, hjust = 1))+
+  labs(x = "Vehicle Constructor Name",y = "Mean final position")
+```
+
+Constructor and final position have an interesting relationship that is not linear. There are also relatively few constructors with a mean final position of less than the overall average final position.
+
+#### Modelling by Final Position
+
+Next, we will model the entire data set 
 
 ```{r split data into train & validate, echo = TRUE }
 df_data_with_rows <- tibble::rowid_to_column(df_data, "ID")
@@ -289,51 +330,6 @@ cat("Train Fit - Driver and Constructor", "\n")
 cat("  Rsquare", rsquare(f_drivcons_pos, df_validate_pos), "\n")
 cat("  MSE", mse(f_drivcons_pos, df_validate_pos), "\n")
 ```
-
-
-
-## Final Position
-
-#### Driver and Constructor by Final Position
-
-```{r fig.width = 20,fig.height=15, echo=FALSE}
-#df_data %>%
-#  mutate(driver_name = fct_reorder(as.character(driver_name),positionOrder))%>%
-#  ggplot(mapping = aes(x = driver_name, y = positionOrder)) +
-#  geom_boxplot() +
-#  theme_minimal() +
-#  theme(axis.text.x = element_text(angle = 90,vjust = 0.5, hjust = 1))+
-#  labs(x = "Driver Name",y = "Final position")
-
-#df_data %>%
-#  mutate(constructor_name = fct_reorder(as.character(constructor_name),positionOrder))%>%
-#  ggplot(mapping = aes(x = constructor_name, y = positionOrder)) +
-#  geom_boxplot()+
-#  theme_minimal() +
-#  theme(axis.text.x = element_text(angle = 90,vjust = 0.5, hjust = 1))+
-# labs(x = "Vehicle Constructor Name",y = "Final position")
-
-df_data %>%
-  summarise(mean_pos = mean(positionOrder))
-
-df_data %>%
-  mutate(mean_pos = mean(positionOrder)) %>%
-  group_by(constructor_name) %>%
-  mutate(mean_posOrder = mean(positionOrder)) %>%
-  ungroup() %>%
-  mutate(constructor_name = fct_reorder(as.character(constructor_name),mean_posOrder))%>%
-  
-  ggplot() +
-  geom_point(aes(x = constructor_name, y = mean_posOrder))+
-  geom_abline(aes(slope=0, intercept=mean_pos, color="red")) +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 90,vjust = 0.5, hjust = 1))+
-  labs(x = "Vehicle Constructor Name",y = "Mean final position")
-```
-
-Constructor and final position have an interesting relationship that is not linear. There are also relatively few constructors with a mean final position of less than the overall average final position.
-
-#### Modelling by Final Position
 
 #### Probability Intervals
 
