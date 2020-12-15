@@ -23,6 +23,7 @@ df_stdavglap <-  read_csv("processed_data/std_avg_laptime.csv")
 ```{r data checks, include = FALSE}
 df_avglaptime %>% 
   glimpse()
+
 df_avglaptime %>% 
   summary()
 ```
@@ -39,6 +40,7 @@ df_avglaptime %>%
     x = "Average Lap Time (ms)"
   ) + 
   theme_minimal()
+
 df_avglaptime %>% 
   ggplot(aes(circuit_avg_lap)) + 
   geom_histogram(bins = 60) + 
@@ -57,7 +59,7 @@ df_avglaptime %>%
   ggplot(aes(circuit_name, circuit_avg_lap)) + 
   geom_jitter(aes(color = year), alpha = 1/14) +
   coord_flip() + 
-  labs(title = "Circuit Average Lap Time") +
+  labs(title = "Circuit Average Lap for GPs containing Drivers Who Have Driven For Multiple Teams") +
   theme_minimal() +
   theme(plot.title = element_text(size = 9))
 ```
@@ -84,31 +86,37 @@ df_stdavglap %>%
 
 ### Creating Model
 
-```{r modeling the entire data set}
+```{r modeling the partial data set}
+
 fullfit_driver <-
   df_stdavglap %>%
   lm(
     data = .,
     formula = std_avg_lap ~ as.factor(driverId)
   )
+
 print("Full Fit - Just Driver")
 cat("Rsquare", rsquare(fullfit_driver, df_stdavglap), "\n")
 cat("MSE", mse(fullfit_driver, df_stdavglap), "\n")
+
 fullfit_constructor <- 
   df_stdavglap %>% 
   lm(
     data = .,
     formula = std_avg_lap ~ as.factor(constructorId)
   )
+
 print("Full Fit - Just Constructor")
 cat("Rsquare", rsquare(fullfit_constructor, df_stdavglap), "\n")
 cat("MSE", mse(fullfit_constructor, df_stdavglap), "\n")
+
 fullfit_driver_constructor <- 
   df_stdavglap %>% 
   lm(
     data = .,
     formula = std_avg_lap ~ as.factor(driverId) + as.factor(constructorId)
   )
+
 print("Full Fit - Driver and Constructor")
 cat("Rsquare", rsquare(fullfit_driver_constructor, df_stdavglap), "\n")
 cat("MSE", mse(fullfit_driver_constructor, df_stdavglap), "\n")
@@ -129,8 +137,8 @@ cat("MSE", mse(fullfit_driver_constructor, df_stdavglap), "\n")
 
 ## Creating Train and Validation Data Frames
 
-```{r data loading, include = FALSE}
-df_stdavglap <- read_csv("processed_data/std_avg_laptime.csv")
+```{r data processing for train/validate, include = FALSE}
+
 # Creating row ID column for anti_join
 df_stdavglap <- tibble::rowid_to_column(df_stdavglap, "ID")
 ```
@@ -138,52 +146,62 @@ df_stdavglap <- tibble::rowid_to_column(df_stdavglap, "ID")
 ```{r train and validate data frames}
 #Setting seed for temporary repeatability
 #set.seed("101")
+
 #Getting number of observations to feed into n for df_train
 number_obs <- df_stdavglap %>% 
   group_by(driverId, circuitId) %>% 
   summarize(n = n()) %>% 
   pull(n)
+
 #Sampling by 
 df_train <-
   df_stdavglap %>%
   group_by(driverId, circuitId) %>% 
   slice_sample(n = 2) %>% 
   ungroup()
+
 df_validate <-
   anti_join(
     df_stdavglap,
     df_train,
     by = "ID"
   )
+
 df_train %>% arrange(ID)
 df_validate %>% arrange(ID)
 ```
 
 ```{r modeling with training and validation data frames}
+
 trainfit_driver <-
   df_train %>%
   lm(
     data = .,
     formula = std_avg_lap ~ as.factor(driverId)
   )
+
 print("Train Fit - Just Driver")
 cat("Rsquare", rsquare(trainfit_driver, df_validate), "\n")
 cat("MSE", mse(trainfit_driver, df_validate), "\n")
+
 trainfit_constructor <- 
   df_train %>% 
   lm(
     data = .,
     formula = std_avg_lap ~ as.factor(constructorId)
   )
+
 print("Train Fit - Just Constructor")
 cat("Rsquare", rsquare(trainfit_constructor, df_validate), "\n")
 cat("MSE", mse(trainfit_constructor, df_validate), "\n")
+
 trainfit_driver_constructor <- 
   df_train %>% 
   lm(
     data = .,
-    formula = std_avg_lap ~ as.factor(driverId) + as.factor(constructorId)
+    formula = std_avg_lap ~ as.factor(driverId) + as.factor(constructorId) 
   )
+
 print("Train Fit - Driver and Constructor")
 cat("Rsquare", rsquare(trainfit_driver_constructor, df_validate), "\n")
 cat("MSE", mse(trainfit_driver_constructor, df_validate), "\n")
@@ -193,40 +211,172 @@ cat("MSE", mse(trainfit_driver_constructor, df_validate), "\n")
 
 ### Visualizing Prediction 
 
-```{r}
+```{r visualize prediction coefficients}
 names <- 
   df_stdavglap %>% 
-  select(driverId, constructorId) %>% 
+  filter(year >= 2014) %>% 
+  select(driverId, constructorId, std_avg_lap) %>% 
   mutate(driverId = as.factor(driverId),
          constructorId = as.factor(constructorId))
-tibble(names) %>% 
+
+pred_plot <-tibble(names) %>% 
   add_predictions(trainfit_driver, var = "sal_pred-d") %>%
   add_predictions(trainfit_constructor, var = "sal_pred-c") %>%
-  add_predictions(trainfit_constructor, var = "sal_pred-d+c") %>%  
+  add_predictions(trainfit_driver_constructor, var = "sal_pred-d+c") %>%  
   pivot_longer(
     names_to = c(".value", "model"),
     names_sep = "-",
     cols = matches("sal")
   ) %>% 
-  ggplot(aes(driverId, sal_pred, color = model)) +
-  geom_line(aes(group = model), alpha = .5) +
-  geom_point(size = .5, alpha = .5) +
+  mutate(model = fct_relevel(model, "d", "c", "d+c"))
+
+hull <- pred_plot %>% 
+  group_by(model) %>% 
+  slice(chull(std_avg_lap, sal_pred))
+
+pred_plot %>% 
+  ggplot(aes(std_avg_lap, sal_pred, color = model)) +
+ # geom_line(aes(group = model), alpha = .5) +
+  geom_point(aes(group = model), size = .5, alpha = .5) +
+   geom_polygon(data = hull, aes(fill = model), alpha = 1/8) +
   theme_minimal() +
   theme(
     aspect.ratio= 2/3,
-    text = element_text(size = 5), 
-    axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 0,
-                               ) 
-    )
+    text = element_text(size = 10), 
+    axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 0, size = 4)
+    ) #+ 
+ # scale_x_log10(labels = comma) + 
+ # scale_y_log10(labels = comma) 
+  
 ```
 
 ## Modeling Using Position Order
 
 ```{r load larger data set, include = FALSE}
 df_f1clean <- read_csv("processed_data/clean_f1.csv")
+
+df_f1clean <- tibble::rowid_to_column(df_f1clean, "ID")
 ```
 
-```{r}
+```{r quick checks}
 df_f1clean %>% 
   summary()
 ```
+
+
+```{r modeling the entire data set}
+
+fullfit_driver2 <-
+  df_f1clean %>%
+  lm(
+    data = .,
+    formula = positionOrder ~ as.factor(driverId)
+  )
+
+print("Full Fit - Just Driver")
+cat("Rsquare", rsquare(fullfit_driver2, df_f1clean), "\n")
+cat("MSE", mse(fullfit_driver2, df_f1clean), "\n")
+
+fullfit_constructor2 <- 
+  df_f1clean %>% 
+  lm(
+    data = .,
+    formula = positionOrder ~ as.factor(constructorId)
+  )
+
+print("Full Fit - Just Constructor")
+cat("Rsquare", rsquare(fullfit_constructor2, df_f1clean), "\n")
+cat("MSE", mse(fullfit_constructor2, df_f1clean), "\n")
+
+fullfit_driver_constructor2 <- 
+  df_f1clean %>% 
+  lm(
+    data = .,
+    formula = positionOrder ~ as.factor(driverId) + as.factor(constructorId) + as.factor(circuitId)
+  )
+
+print("Full Fit - Driver and Constructor")
+cat("Rsquare", rsquare(fullfit_driver_constructor2, df_f1clean), "\n")
+cat("MSE", mse(fullfit_driver_constructor2, df_f1clean), "\n")
+```
+
+***Observations***
+
+- 
+
+
+```{r split data into train & validate}
+df_train2 <-
+  df_f1clean %>%
+  group_by(driverId, constructorId, circuitId) %>% 
+  slice_sample(n = 1)
+
+df_validate2 <-
+  anti_join(
+    df_f1clean,
+    df_train2,
+    by = "ID"
+  )
+
+df_train2 %>% arrange(ID)
+df_validate2 %>% arrange(ID)
+```
+
+```{r}
+trainfit_driver_p <-
+  df_train2 %>%
+  lm(
+    data = .,
+    formula = positionOrder ~ as.factor(driverId)
+  )
+
+print("Train Fit - Just Driver")
+cat("Rsquare", rsquare(trainfit_driver_p, df_validate2), "\n")
+cat("MSE", mse(trainfit_driver_p, df_validate2), "\n")
+cat("MAE", mae(trainfit_driver_p, df_validate2), "\n")
+
+trainfit_constructor_p <- 
+  df_train2 %>% 
+  lm(
+    data = .,
+    formula = positionOrder ~ as.factor(constructorId)
+  )
+
+print("Train Fit - Just Constructor")
+cat("Rsquare", rsquare(trainfit_constructor_p, df_validate2), "\n")
+cat("MSE", mse(trainfit_constructor_p, df_validate2), "\n")
+cat("MAE", mae(trainfit_constructor_p, df_validate2), "\n")
+
+trainfit_driver_constructor_p <- 
+  df_train2 %>% 
+  lm(
+    data = .,
+    formula = positionOrder ~ as.factor(driverId) + as.factor(constructorId)
+  )
+
+print("Train Fit - Driver and Constructor")
+cat("Rsquare", rsquare(trainfit_driver_constructor_p, df_validate2), "\n")
+cat("MSE", mse(trainfit_driver_constructor_p, df_validate2), "\n")
+cat("MAE", mae(trainfit_driver_constructor_p, df_validate2), "\n")
+```
+
+***Observations***
+
+- This model fit is `far better` than using *standard average lap* as an indicator variable
+- We see the model 
+
+
+```{r overfitting test}
+trainfit_overfit <-
+  df_train2 %>%
+  lm(
+    data = .,
+    formula = positionOrder ~ as.factor(driverId) + as.factor(constructorId) + as.factor(circuitId)
+  )
+
+print("Train Fit - Just Driver")
+cat("Rsquare", rsquare(trainfit_overfit, df_validate2), "\n")
+cat("MSE", mse(trainfit_overfit, df_validate2), "\n")
+cat("MAE", mae(trainfit_overfit, df_validate2), "\n")
+```
+
