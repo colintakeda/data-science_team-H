@@ -159,30 +159,6 @@ df_timedata %>%
 
 The graph above shows a visual comparison of standardized average lap time by circuit. The slope of the median is small in magnitude relative to the range of the standardized average lap time, showing that standardizing the average lap time successfully minimizes the effect of circuit. 
 
-#### Driver and Constructor by Standardized Average Lap Time
-
-```{r fig.width = 20,fig.height=10, echo=FALSE,  warning = FALSE}
-#df_timedata %>%
-#  mutate(driver_name = fct_reorder(as.character(driver_name),std_avg_lap))%>%
-#  ggplot(mapping = aes(x = driver_name, y = std_avg_lap)) +
-#  geom_boxplot() +
-#  theme_minimal() +
-##  ylim(-2,2) +
-#  theme(axis.text.x = element_text(angle = 90,vjust = 0.5, hjust = 1))+
-#  labs(x = "Driver Name",y = "Standardized Average Lap Time (ms)")
-
-df_timedata %>%
-  mutate(constructor_name = fct_reorder(as.character(constructor_name),std_avg_lap))%>%
-  ggplot(mapping = aes(x = constructor_name, y = std_avg_lap)) +
-  geom_boxplot()+
-  theme_minimal() +
-  ylim(-2,2) +
-  theme(axis.text.x = element_text(angle = 90,vjust = 0.5, hjust = 1))+
-  labs(x = "Vehicle Constructor Name",y = "Standardized Average Lap Time (ms)")
-```
-
-Constructor and standardized average lap time appear to have a positive and fairly linear relationship. This makes sense because standardizing should correct the distribution to become more linear. Seeing that constructor has an impact on standard average lap time is a good sign because it indicates that there may be some causality and therefore also predictive capability.
-
 #### Modeling by standard average lap time
 
 First, let's model the ***entire data set*** to get a sense of how informative a linear model is for our dataset, solely based upon driver, constructor, and a combination of the two.
@@ -286,48 +262,7 @@ cat("  Rsquare", rsquare(f_drivcons_pos, df_validate_pos), "\n")
 cat("  MSE", mse(f_drivcons_pos, df_validate_pos), "\n")
 ```
 
-
-
 ## Final Position
-
-#### Driver and Constructor by Final Position
-
-```{r fig.width = 20,fig.height=15, echo=FALSE}
-#df_data %>%
-#  mutate(driver_name = fct_reorder(as.character(driver_name),positionOrder))%>%
-#  ggplot(mapping = aes(x = driver_name, y = positionOrder)) +
-#  geom_boxplot() +
-#  theme_minimal() +
-#  theme(axis.text.x = element_text(angle = 90,vjust = 0.5, hjust = 1))+
-#  labs(x = "Driver Name",y = "Final position")
-
-#df_data %>%
-#  mutate(constructor_name = fct_reorder(as.character(constructor_name),positionOrder))%>%
-#  ggplot(mapping = aes(x = constructor_name, y = positionOrder)) +
-#  geom_boxplot()+
-#  theme_minimal() +
-#  theme(axis.text.x = element_text(angle = 90,vjust = 0.5, hjust = 1))+
-# labs(x = "Vehicle Constructor Name",y = "Final position")
-
-df_data %>%
-  summarise(mean_pos = mean(positionOrder))
-
-df_data %>%
-  mutate(mean_pos = mean(positionOrder)) %>%
-  group_by(constructor_name) %>%
-  mutate(mean_posOrder = mean(positionOrder)) %>%
-  ungroup() %>%
-  mutate(constructor_name = fct_reorder(as.character(constructor_name),mean_posOrder))%>%
-  
-  ggplot() +
-  geom_point(aes(x = constructor_name, y = mean_posOrder))+
-  geom_abline(aes(slope=0, intercept=mean_pos, color="red")) +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 90,vjust = 0.5, hjust = 1))+
-  labs(x = "Vehicle Constructor Name",y = "Mean final position")
-```
-
-Constructor and final position have an interesting relationship that is not linear. There are also relatively few constructors with a mean final position of less than the overall average final position.
 
 #### Modelling by Final Position
 
