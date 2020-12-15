@@ -126,7 +126,7 @@ Final position is heavily reliant on how many laps the driver was able to comple
 
 Average lap time is a comprehensive measure of how well a driver performed in a race because it is informed only on the laps they were able to complete, unlike final position. The only problem is that it doesn't account for the effect of circuit on lap time, so we need to correct for this difference across circuits.
 
-```{r average lap time per circuit, echo=FALSE, fig.align="center"}
+```{r average lap time per circuit, echo=FALSE}
 df_timedata %>%
   ggplot(aes(fct_reorder(as.factor(circuitId), avg_lap), avg_lap)) + 
   geom_boxplot() +
