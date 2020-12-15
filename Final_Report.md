@@ -2,30 +2,10 @@ Lilo Heinrich, Tim Novak, and Colin Takeda
 12-14-2020
 
   - [Data Background](#data-background)
-      - [Context](#context)
-      - [Data Source](#data-source)
   - [Investigation Question](#investigation-question)
-      - [Does the car or the driver have the greater
-        impact?](#does-the-car-or-the-driver-have-the-greater-impact)
   - [Data Tidying](#data-tidying)
-      - [Time data](#time-data)
-      - [Changes in racing ruleset/vehicle design through the
-        years](#changes-in-racing-rulesetvehicle-design-through-the-years)
-      - [Potential Problems](#potential-problems)
   - [Exploratory Data Analysis](#exploratory-data-analysis)
-      - [Standardized Average Lap Time](#standardized-average-lap-time)
-      - [Standardized Average Lap Time by
-        Circuit](#standardized-average-lap-time-by-circuit)
-      - [Modeling by Standardized Average Lap
-        Time](#modeling-by-standardized-average-lap-time)
   - [Final Position Order](#final-position-order)
-      - [Driver and Constructor by Final Position
-        Order](#driver-and-constructor-by-final-position-order)
-      - [Modeling by Final Position
-        Order](#modeling-by-final-position-order)
-      - [Predicted vs Actual Final Position
-        Order](#predicted-vs-actual-final-position-order)
-      - [Prediction Intervals](#prediction-intervals)
   - [Questions Remaining](#questions-remaining)
   - [Conclusion](#conclusion)
 
@@ -182,7 +162,7 @@ Thus we filtered our data to only examine the data from 2014 onwards.
 
 #### Standardized Average Lap Time
 
-![](Final_Report_files/figure-gfm/finish%20race-1.png)<!-- -->
+<img src="Final_Report_files/figure-gfm/finish race-1.png" style="display: block; margin: auto;" />
 
     ## # A tibble: 1 x 1
     ##   percent_finishrace
@@ -202,7 +182,7 @@ able to complete, unlike final position. The only problem is that it
 doesn’t account for the effect of circuit on lap time, so we need to
 correct for this difference across circuits.
 
-![](Final_Report_files/figure-gfm/average%20lap%20time%20per%20circuit-1.png)<!-- -->
+<img src="Final_Report_files/figure-gfm/average lap time per circuit-1.png" style="display: block; margin: auto;" />
 
 The average lap time varies across circuits due to the differences in
 track length and shape, so we need a way to compare average lap time
@@ -222,7 +202,7 @@ deviation, and \(z\) is the standard score of \(x\)
 
 #### Standardized Average Lap Time by Circuit
 
-![](Final_Report_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
+<img src="Final_Report_files/figure-gfm/unnamed-chunk-2-1.png" style="display: block; margin: auto;" />
 
 The graph above shows a visual comparison of standardized average lap
 time by circuit. The slope of the median is small in magnitude relative
@@ -285,7 +265,7 @@ should explore other variables to indicate performance.
 
 #### Driver and Constructor by Final Position Order
 
-![](Final_Report_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
+<img src="Final_Report_files/figure-gfm/unnamed-chunk-4-1.png" style="display: block; margin: auto;" />
 
 We can see that when we plot the final position vs the driver of the
 vehicle there does seem to be a correlation. in that some drivers tend
@@ -300,7 +280,7 @@ relation between the two variables. An interesting relation we can see
 in the data are ‘plateaus’ in the median values where there are sets of
 drivers with similar performance.
 
-![](Final_Report_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+<img src="Final_Report_files/figure-gfm/unnamed-chunk-5-1.png" style="display: block; margin: auto;" />
 
 When we plot the constructor by the final position order, we see
 generally that the higher performing constructors are associated with
@@ -355,9 +335,9 @@ in racing that are not covered by the investigated factors.
 
 #### Predicted vs Actual Final Position Order
 
-![](Final_Report_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->![](Final_Report_files/figure-gfm/unnamed-chunk-8-2.png)<!-- -->
+<img src="Final_Report_files/figure-gfm/unnamed-chunk-8-1.png" style="display: block; margin: auto;" /><img src="Final_Report_files/figure-gfm/unnamed-chunk-8-2.png" style="display: block; margin: auto;" />
 
-![](Final_Report_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+<img src="Final_Report_files/figure-gfm/unnamed-chunk-9-1.png" style="display: block; margin: auto;" />
 
 Above are the visualizations of the actual vs. predicted final position
 of our three linear models, with a line through the axis of symmetry
@@ -386,7 +366,7 @@ variables.
 
 #### Prediction Intervals
 
-![](Final_Report_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
+<img src="Final_Report_files/figure-gfm/unnamed-chunk-10-1.png" style="display: block; margin: auto;" />
 
 While we are able to compute the prediction intervals on the inputs to
 our model, we had a hard time creating an effective visual to compare
