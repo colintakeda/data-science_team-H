@@ -1,3 +1,4 @@
+=======
 ---
 title: ""
 author: "Lilo Heinrich, Tim Novak, and Colin Takeda"
@@ -84,14 +85,15 @@ In this time-filtered dataset we added these columns:
 #df_timedata %>% glimpse()
 ```
 
+#### Changes in racing ruleset/vehicle design through the years
+
+This data is for 70 years of races and over that period of time [formula racing has changed a lot](https://youtu.be/hgLQWIAaCmY). This means that many factors will change through the years depending on the rule set that has been put in place. To help mitigate this problem we decided to filter down to the subset of data which follows the most recent set of rules for the races. The [most recent significant set of rules](https://en.wikipedia.org/wiki/Formula_One_engines#2014%E2%80%932021) dates back to 2014 where the allowed engine specifications were changed. Thus we filtered our data to only examine the data from 2014 onwards.
+
 #### Potential Problems
 
 - Some examples of [constructor name changes](https://www.reddit.com/r/formula1/comments/1dos3r/i_made_a_diagram_to_show_how_current_f1_teams/)
-- Rules change year to year and can significantly affect performance
 - New drivers are skewed because they don't have as many data points yet
-- This data is for 70 years of races and [formula racing has changed a lot](https://youtu.be/hgLQWIAaCmY)
-
-  - Consider filtering on year >= 2000
+- Teams and drivers are correlated, in that the best drivers tend to get hired by the best teams
 
 ----------------------------------------
 
@@ -159,7 +161,7 @@ The graph above shows a visual comparison of standardized average lap time by ci
 
 #### Modeling by Standard Average Lap Time
 
-First, let's model the a subset of the data that has completed times to get a sense of how informative a linear model of `standarderized average lap time` is for our dataset, solely based upon driver, constructor, and a combination of the two.
+First, let's model the a subset of the data that has completed times to get a sense of how informative a linear model of **standarderized average lap time** is for our dataset, solely based upon driver, constructor, and a combination of the two.
 
 ```{r modeling a subset of the data, echo = TRUE}
 
@@ -199,9 +201,9 @@ cat("  Rsquare", rsquare(f_drivcons_sal, df_timedata), "\n")
 cat("  MSE", mse(f_drivcons_sal, df_timedata), "\n")
 ```
 
-Starting with looking at the mean square error (MSE) we can compare the different fits against one another. Between fits, the error is lowest with both `driver and constructor`. The "goodness of fit" is best with both factors involved, which may imply that both are informative towards standard average lap time. However, the difference is quite small between MSEs, so the predictive capabilities of both still seem minute. The order of best to worst fit, solely based upon MSE, is **driver and constructor, just driver, and just constructor.** These results may imply that driver is a better predictor of outcome than constructor, but this is not necessarily the case. 
+Starting with looking at the mean square error (MSE) we can compare the different fits against one another. Between fits, the error is lowest with both *driver and constructor*. The "goodness of fit" is best with both factors involved, which may imply that both are informative towards standard average lap time. However, the difference is quite small between MSEs, so the predictive capabilities of both still seem minute. The order of best to worst fit, solely based upon MSE, is **driver and constructor, just driver, and just constructor.** These results may imply that driver is a better predictor of outcome than constructor, but this is not necessarily the case. 
 
-Looking next at our R-square value we see that our models **does not** encapsulate much of the variance of the data. We see the fraction of the variance of the data ranges from 4.8% to 8.9%. The order of best to worst fit, solely based upon R-square, is **driver and constructor, just driver, and finally just constructor.** 
+Looking next at our R-square value we see that our models *does not* encapsulate much of the variance of the data. We see the fraction of the variance of the data ranges from 4.8% to 8.9%. The order of best to worst fit, solely based upon R-square, is **driver and constructor, just driver, and finally just constructor.** 
 
 These models should be taken with a grain or more of salt as we are using the entire subset of data set to create them, so they are extremely optimistic with the fit and do not cover all observations available. Also, as we see from our R-square values, using driver and/or constructor does not seem very fruitful for modeling standardized average lap time. While this was a useful metric for comparing across circuits, it does not seem to be as useful for modeling. Instead, we should explore other variables to indicate performance. 
 
@@ -338,12 +340,8 @@ df_preds %>%
 ```{r}
 df_intervals <-
   df_validate_pos %>%
-  add_uncertainties(f_driv_pos, interval = "prediction", prefix = "pi") %>%
-  mutate(pi_fit_driv = pi_fit, pi_lwr_driv = pi_lwr, pi_upr_driv = pi_upr) %>%
-  add_uncertainties(f_cons_pos, interval = "prediction", prefix = "pi") %>%
-  mutate(pi_fit_cons = pi_fit, pi_lwr_cons = pi_lwr, pi_upr_cons = pi_upr) %>%
-  add_uncertainties(f_drivcons_pos, interval = "prediction", prefix = "pi") %>%
-  mutate(pi_fit_drivcons = pi_fit, pi_lwr_drivcons = pi_lwr, pi_upr_drivcons = pi_upr)
+  add_uncertainties(f_cons_pos, interval = "prediction", prefix = "pi")
+  #mutate(pi_fit_cons = pi_fit, pi_lwr_cons = pi_lwr, pi_upr_cons = pi_upr) %>%
 df_intervals
 
 df_intervals %>%
@@ -371,7 +369,7 @@ If possible given your data, report all estimates with confidence / prediction /
 
 ## Conclusion
 
-testing testing testing
+
 
 ----------------------------------------
 
@@ -407,5 +405,3 @@ Styled:
 
 - (The usual stuff)
 - Report must contain at least one presentation-quality figure
-
->>>>>>> 0186163de513b72013cb76d44c3cda1f8b393891
