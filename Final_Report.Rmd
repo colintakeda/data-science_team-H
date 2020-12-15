@@ -27,7 +27,7 @@ df_data <- read_csv("processed_data/clean_f1.csv") %>%
 #### Context
 The Formula 1 World Championship has been one of the premier forms of auto racing around the world since its inaugural season in 1950. The word "formula" refers to the set of rules to which all participants' cars must conform. A Formula 1 season consists of a series of Grands Prix races which take place worldwide on circuits and closed public roads.
 
-#### Source
+#### Data Source
 The [Formula 1 World Championships](https://www.kaggle.com/rohanrao/formula-1-world-championship-1950-2020) dataset consists of all information on the Formula 1 races, drivers, constructors, qualifying, circuits, lap times, pit stops, and championships for every season from 1950 to 2020.
 
 This dataset was published by Rohan Rao, a Data Scientist who goes by the name [Vopani](https://www.kaggle.com/rohanrao) on Kaggle. (Fun fact: he is also the reigning National Sudoku Champion of India.) He compiled this dataset using the [Ergast Developer API](http://ergast.com/mrd/), an experimental web service that provides a historical record of motor racing data for non-commercial purposes. The API provides data specifically for the Formula One series, from the beginning of the world championships in 1950 up to the present season.
@@ -245,7 +245,7 @@ Taken together we can see that the driver and constructor graphs are correlated 
 
 Next, we will model the entire data set 
 
-```{r split data into train & validate, echo = TRUE }
+```{r split data into train & validate, echo = FALSE }
 df_data_with_rows <- tibble::rowid_to_column(df_data, "ID")
 
 df_validate_pos <-
@@ -261,8 +261,8 @@ df_train_pos <-
     by = "ID"
   )
 
-df_train_pos
-df_validate_pos
+#df_train_pos
+#df_validate_pos
 ```
 
 ```{r modeling using positionOrder, echo = FALSE}
@@ -304,7 +304,7 @@ cat("  MSE", mse(f_drivcons_pos, df_validate_pos), "\n")
 
 #### Prediction Interval
 
-```{r}
+```{r echo=FALSE}
 ## Helper function to compute uncertainty bounds
 add_uncertainties <- function(data, model, prefix = "pred", ...) {
   df_fit <-
@@ -316,7 +316,7 @@ add_uncertainties <- function(data, model, prefix = "pred", ...) {
 }
 ```
 
-```{r}
+```{r echo=FALSE, warning=FALSE}
 df_preds <-
   df_validate_pos %>%
   add_predictions(f_driv_pos) %>%
@@ -325,7 +325,7 @@ df_preds <-
   mutate(pred_cons = pred) %>%
   add_predictions(f_drivcons_pos) %>%
   mutate(pred_drivcons = pred)
-df_preds
+#df_preds
 
 df_preds %>%
   ggplot() + 
@@ -336,12 +336,12 @@ df_preds %>%
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
 ```
 
-```{r}
+```{r echo=FALSE}
 df_intervals <-
   df_validate_pos %>%
   add_uncertainties(f_cons_pos, interval = "prediction", prefix = "pi")
   #mutate(pi_fit_cons = pi_fit, pi_lwr_cons = pi_lwr, pi_upr_cons = pi_upr) %>%
-df_intervals
+#df_intervals
 
 df_intervals %>%
   mutate(constructor_name = fct_reorder(constructor_name, positionOrder)) %>%
