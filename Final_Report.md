@@ -429,5 +429,3 @@ investigated in this project. However, if one wants to know whether the
 driver or the vehicle is more significant in determining results, the
 answer is that there is no statistically significant difference between
 the two factors’ predictive ability to determine race results.
-
------
