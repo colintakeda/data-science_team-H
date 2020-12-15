@@ -304,7 +304,7 @@ cat("  Rsquare", rsquare(f_drivcons_pos, df_validate_pos), "\n")
 cat("  MSE", mse(f_drivcons_pos, df_validate_pos), "\n")
 ```
 
-After multiple samples we see that the R-squared values for just driver and just constructor tend to range from 30% to 37% and a MSE that ranges from 22 to 24. The just driver and just constructor fits seem to very close in R-squared and MSE to one another and there is no significant difference between the two. In comparison, driver and constructor has an R-squared value that tends to range from 33% to 41% and a MSE of 20 to 23. The driver and constructor fit tends to always be better than either the just driver or just constructor fit. Overall, the the range of values for the driver and constructor fit is promising given the multitude of outside factors in racing that is not covered by the investigated factors
+After multiple samples we see that the R-squared values for just driver and just constructor tend to range from 30% to 37% and a MSE that ranges from 22 to 24. The just driver and just constructor fits seem to be very close in R-squared values and MSE to one another and there is no significant difference between the two. In comparison, driver and constructor has an R-squared value that tends to range from 33% to 41% and a MSE of 20 to 23. The driver and constructor fit tends to always be better than either the just driver or just constructor fit. Overall, the the range of values for the driver and constructor fit is promising given the multitude of outside factors in racing that is not covered by the investigated factors.
 
 #### Prediction Interval
 
